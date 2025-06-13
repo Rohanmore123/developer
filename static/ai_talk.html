@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Therapy Talk</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 15px 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .chat-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .avatar-container {
+            width: 40%;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+        .avatar-image {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .caption-container {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            width: 90%;
+            text-align: center;
+            font-size: 1.1rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-messages {
+            width: 60%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease-in-out;
+            line-height: 1.5;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #e3f2fd;
+            border-bottom-right-radius: 5px;
+            color: #333;
+        }
+        .ai-message {
+            align-self: flex-start;
+            background-color: #f0f2f5;
+            border-bottom-left-radius: 5px;
+            color: #333;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+        .chat-input input:focus {
+            border-color: #4a6fa5;
+            box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+        }
+        .btn-send {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-send:hover {
+            background-color: #3a5a8f;
+        }
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .audio-controls button {
+            background: none;
+            border: none;
+            color: #4a6fa5;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            margin-right: 10px;
+            transition: all 0.2s ease;
+        }
+        .audio-controls button:hover {
+            color: #3a5a8f;
+            transform: scale(1.1);
+        }
+        .status-bar {
+            padding: 5px 15px;
+            background-color: #e9ecef;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .status-bar.fade-out {
+            opacity: 0;
+        }
+        #connectionStatus {
+            font-weight: bold;
+        }
+        .connected {
+            color: green;
+        }
+        .disconnected {
+            color: red;
+        }
+        .connecting {
+            color: orange;
+        }
+        .speaking {
+            animation: speaking 1s infinite alternate;
+        }
+        @keyframes speaking {
+            from { box-shadow: 0 0 5px rgba(74, 111, 165, 0.5); }
+            to { box-shadow: 0 0 20px rgba(74, 111, 165, 0.8); }
+        }
+        .recording-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(220, 53, 69, 0.95);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 2px solid #fff;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            animation: pulse-shadow 2s infinite;
+        }
+        .recording-indicator .dot {
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+            box-shadow: 0 0 5px #fff;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        @keyframes pulse-shadow {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        .timer {
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+        .silence-bar {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 30px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            border: 2px solid #ddd;
+            z-index: 1000;
+        }
+        .silence-progress {
+            height: 100%;
+            width: 0%;
+            background-color: #28a745;
+            background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+            transition: width 0.1s linear;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+        @keyframes progress-bar-stripes {
+            from { background-position: 1rem 0; }
+            to { background-position: 0 0; }
+        }
+        .log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        .log-entry {
+            margin: 2px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 2px;
+        }
+        .log-entry.error {
+            color: #dc3545;
+        }
+        .log-entry.success {
+            color: #28a745;
+        }
+        .log-entry.info {
+            color: #17a2b8;
+        }
+        .voice-select {
+            width: auto;
+            padding: 5px;
+            border-radius: 20px;
+            border: 1px solid #ced4da;
+            background-color: #f8f9fa;
+            color: #4a6fa5;
+            font-size: 0.9rem;
+            margin-right: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid d-flex flex-column h-100 py-3">
+        <div class="chat-container flex-grow-1">
+            <div class="chat-header">
+                <h2><i class="fas fa-comments me-2"></i> AI Therapy Talk</h2>
+                <div class="d-flex align-items-center">
+                    <button id="stopAllAudioBtn" class="btn btn-sm btn-outline-light me-3" title="Stop all audio playback" style="display: none;">
+                        <i class="fas fa-volume-mute me-1"></i> Stop Audio
+                    </button>
+                    <span id="connectionStatus" class="disconnected">Disconnected</span>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div id="statusMessage">Please enter your patient ID and token to connect</div>
+            </div>
+            <div id="loginForm" class="p-4">
+                <div class="mb-3">
+                    <label for="patientId" class="form-label">Patient ID</label>
+                    <input type="text" class="form-control" id="patientId" value="f31a95c6-76ef-4bb2-936c-b258285682d9" required>
+                </div>
+                <div class="mb-3">
+                    <label for="token" class="form-label">Authentication Token</label>
+                    <input type="text" class="form-control" id="token" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMzFhOTVjNi03NmVmLTRiYjItOTM2Yy1iMjU4Mjg1NjgyZDkiLCJyb2xlcyI6InBhdGllbnQiLCJleHAiOjE3MTU2MTYwMDB9.Ij0BnOgMwKFwB7VOzRdL-qdpEXNF7YvZZ8R_c-vKbcM" required>
+                </div>
+                <div class="mb-3">
+                    <label for="voiceSelect" class="form-label">Therapist Voice</label>
+                    <select class="form-select" id="voiceSelect">
+                        <option value="nova" selected>Nova (Female, Soft)</option>
+                        <option value="alloy">Alloy (Neutral)</option>
+                        <option value="echo">Echo (Male)</option>
+                        <option value="fable">Fable (Female)</option>
+                        <option value="onyx">Onyx (Male, Deep)</option>
+                        <option value="shimmer">Shimmer (Female, Clear)</option>
+                    </select>
+                </div>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Automatic Mode:</strong> The system will automatically record your voice when the AI speaks and stop after 5 seconds of silence.
+                </div>
+                <button id="connectBtn" class="btn btn-primary">Connect</button>
+                <div class="log mt-3" id="log">
+                    <div class="log-entry info">Connection log will appear here...</div>
+                </div>
+            </div>
+            <div id="chatInterface" class="d-none flex-grow-1 d-flex flex-column">
+                <div class="chat-body">
+                    <div class="avatar-container">
+                        <img src="https://img.freepik.com/free-photo/portrait-smiling-young-woman-doctor-with-stethoscope-around-neck-standing-with-arms-crossed-white-coat_1258-88108.jpg"
+                             alt="Therapist Avatar"
+                             class="avatar-image"
+                             id="therapistAvatar">
+                        <div class="caption-container" id="captionContainer">
+                            Welcome to your therapy session
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be added here -->
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Type your message here..." autocomplete="off">
+                    <select id="chatVoiceSelect" class="voice-select" title="Select therapist voice">
+                        <option value="nova" selected>Nova</option>
+                        <option value="alloy">Alloy</option>
+                        <option value="echo">Echo</option>
+                        <option value="fable">Fable</option>
+                        <option value="onyx">Onyx</option>
+                        <option value="shimmer">Shimmer</option>
+                    </select>
+                    <button id="sendBtn" class="btn-send"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recording indicator (hidden by default) -->
+    <div id="recordingIndicator" class="recording-indicator" style="display: none;">
+        <div class="dot"></div>
+        <span>RECORDING</span>
+        <span class="timer" id="recordingTimer">00:00</span>
+    </div>
+
+    <!-- Silence detection bar (hidden by default) -->
+    <div id="silenceBar" class="silence-bar" style="display: none;">
+        <div id="silenceProgress" class="silence-progress"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // UI Elements
+            const connectBtn = document.getElementById('connectBtn');
+            const patientIdInput = document.getElementById('patientId');
+            const tokenInput = document.getElementById('token');
+            const voiceSelect = document.getElementById('voiceSelect');
+            const chatVoiceSelect = document.getElementById('chatVoiceSelect');
+            const loginForm = document.getElementById('loginForm');
+            const chatInterface = document.getElementById('chatInterface');
+            const chatMessages = document.getElementById('chatMessages');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const statusMessage = document.getElementById('statusMessage');
+            const statusBar = document.querySelector('.status-bar');
+            const stopAllAudioBtn = document.getElementById('stopAllAudioBtn');
+            const therapistAvatar = document.getElementById('therapistAvatar');
+            const captionContainer = document.getElementById('captionContainer');
+            const recordingIndicator = document.getElementById('recordingIndicator');
+            const recordingTimer = document.getElementById('recordingTimer');
+            const silenceBar = document.getElementById('silenceBar');
+            const silenceProgress = document.getElementById('silenceProgress');
+            const logDiv = document.getElementById('log');
+
+            // State variables
+            let socket = null;
+            let mediaRecorder = null;
+            let audioChunks = [];
+            let isRecording = false;
+            let currentAudio = null;
+            let audioElements = {};
+            let isAISpeaking = false;
+            let userHasSpoken = false; // Track if user has started speaking
+            let recordingStartTime = null;
+            let recordingTimerInterval = null;
+            let silenceStartTime = null;
+            let silenceDetectionInterval = null;
+            let silenceThreshold = 0.05; // Increased threshold for silence detection
+            let silenceTimeout = 3000; // Reduced to 3 seconds of silence to stop recording
+            let audioContext = null;
+            let analyser = null;
+            let micStream = null;
+            let debugMode = true; // Enable debug mode to show more logs
+            let volumeHistory = []; // Keep track of recent volume levels
+            let maxRecordingTime = 60000; // Maximum recording time (1 minute) as a safety measure
+            let significantSoundThreshold = 3.0; // Threshold to consider user is speaking
+
+            // Add log entry
+            function addLog(message, type = 'info') {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                logDiv.appendChild(entry);
+                logDiv.scrollTop = logDiv.scrollHeight;
+
+                // Also log to console
+                console.log(`[${type}] ${message}`);
+            }
+
+            // Function to show status messages
+            function showStatusMessage(message, autoHide = true) {
+                statusMessage.textContent = message;
+                statusBar.classList.remove('fade-out');
+
+                if (autoHide) {
+                    setTimeout(() => {
+                        statusBar.classList.add('fade-out');
+                    }, 3000);
+                }
+            }
+
+            // Function to scroll chat to bottom
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Function to add a message to the chat
+            function addMessage(text, sender, keywords = [], audioData = null, responseId = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+
+                // Add message text
+                const messageText = document.createElement('div');
+                messageText.textContent = text;
+                messageDiv.appendChild(messageText);
+
+                // Add timestamp
+                const timestamp = document.createElement('div');
+                timestamp.className = 'message-time';
+                timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageDiv.appendChild(timestamp);
+
+                // Add audio controls for AI messages
+                if (sender === 'ai' && audioData) {
+                    const audioControlsDiv = document.createElement('div');
+                    audioControlsDiv.className = 'audio-controls';
+
+                    // Create audio element
+                    const audio = new Audio(`data:audio/mp3;base64,${audioData}`);
+
+                    if (responseId) {
+                        audioElements[responseId] = audio;
+                    }
+
+                    // Play button
+                    const playBtn = document.createElement('button');
+                    playBtn.className = 'play-btn';
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play audio';
+
+                    // Pause button
+                    const pauseBtn = document.createElement('button');
+                    pauseBtn.className = 'pause-btn';
+                    pauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    pauseBtn.title = 'Pause audio';
+                    pauseBtn.style.display = 'none';
+
+                    // Add event listeners
+                    playBtn.addEventListener('click', () => {
+                        // Stop any currently playing audio
+                        stopAllAudio();
+
+                        // Set AI speaking flag
+                        isAISpeaking = true;
+                        addLog("AI started speaking", "info");
+
+                        // Play this audio
+                        audio.play();
+                        currentAudio = audio;
+
+                        // Show stop all audio button
+                        stopAllAudioBtn.style.display = 'block';
+
+                        // Toggle buttons
+                        playBtn.style.display = 'none';
+                        pauseBtn.style.display = 'inline';
+
+                        // Add speaking effect to avatar
+                        therapistAvatar.classList.add('speaking');
+
+                        // Update caption
+                        captionContainer.textContent = text;
+
+                        // Reset user speaking state
+                        userHasSpoken = false;
+
+                        // Start recording automatically when AI starts speaking
+                        startRecording();
+                    });
+
+                    pauseBtn.addEventListener('click', () => {
+                        audio.pause();
+
+                        // Toggle buttons
+                        playBtn.style.display = 'inline';
+                        pauseBtn.style.display = 'none';
+
+                        // Remove speaking effect
+                        therapistAvatar.classList.remove('speaking');
+
+                        // Set AI speaking flag
+                        isAISpeaking = false;
+                        addLog("AI paused speaking", "info");
+                    });
+
+                    // Handle audio ending
+                    audio.addEventListener('ended', () => {
+                        playBtn.style.display = 'inline';
+                        pauseBtn.style.display = 'none';
+
+                        // Remove speaking effect
+                        therapistAvatar.classList.remove('speaking');
+
+                        // Reset current audio
+                        currentAudio = null;
+
+                        // Set AI speaking flag
+                        isAISpeaking = false;
+                        addLog("AI finished speaking", "info");
+
+                        // Continue recording for a while after AI stops speaking
+                        addLog("Waiting for user to speak...", "info");
+                        showStatusMessage('Listening for your response...', true);
+                    });
+
+                    // Add buttons to controls
+                    audioControlsDiv.appendChild(playBtn);
+                    audioControlsDiv.appendChild(pauseBtn);
+
+                    // Add controls to message
+                    messageDiv.appendChild(audioControlsDiv);
+
+                    // Auto-play the audio for AI messages
+                    setTimeout(() => {
+                        playBtn.click();
+                    }, 500);
+                }
+
+                // Add message to chat
+                chatMessages.appendChild(messageDiv);
+
+                // Scroll to bottom
+                scrollToBottom();
+            }
+
+            // Function to stop all audio playback
+            function stopAllAudio() {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+
+                // Stop all audio elements
+                Object.values(audioElements).forEach(audio => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                });
+
+                // Remove speaking effect
+                therapistAvatar.classList.remove('speaking');
+
+                // Reset caption
+                captionContainer.textContent = "Therapy session in progress";
+
+                // Hide stop button
+                stopAllAudioBtn.style.display = 'none';
+
+                // Set AI speaking flag
+                if (isAISpeaking) {
+                    isAISpeaking = false;
+                    addLog("AI speaking stopped", "info");
+                }
+            }
+
+            // Stop all audio button
+            stopAllAudioBtn.addEventListener('click', stopAllAudio);
+
+            // Connect to WebSocket
+            connectBtn.addEventListener('click', function() {
+                addLog("Connect button clicked", "info");
+
+                // Get values
+                const patientId = patientIdInput.value.trim();
+                const token = tokenInput.value.trim();
+
+                if (!patientId) {
+                    alert('Please enter a patient ID');
+                    addLog("Missing patient ID", "error");
+                    return;
+                }
+
+                if (!token) {
+                    alert('Please enter an authentication token');
+                    addLog("Missing token", "error");
+                    return;
+                }
+
+                // Update UI
+                connectBtn.disabled = true;
+                connectBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Connecting...';
+                connectionStatus.textContent = 'Connecting...';
+                connectionStatus.className = 'connecting';
+                showStatusMessage('Connecting to server...', false);
+
+                // Create WebSocket connection
+                try {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ai-talk/${patientId}?token=${token}`;
+                    addLog(`Connecting to WebSocket URL: ${wsUrl}`, "info");
+
+                    // Close existing socket if any
+                    if (socket) {
+                        socket.close();
+                        addLog("Closing existing WebSocket connection", "info");
+                    }
+
+                    socket = new WebSocket(wsUrl);
+
+                    // Connection opened
+                    socket.onopen = function(event) {
+                        addLog("WebSocket connection established", "success");
+                        connectionStatus.textContent = 'Connected';
+                        connectionStatus.className = 'connected';
+                        showStatusMessage('Connected to AI therapist');
+
+                        // Show chat interface, hide login form
+                        loginForm.classList.add('d-none');
+                        chatInterface.classList.remove('d-none');
+                        chatInterface.classList.add('d-flex');
+
+                        // Sync the voice selection from login form to chat interface
+                        chatVoiceSelect.value = voiceSelect.value;
+
+                        // Automatically send a welcome message to start the conversation
+                        setTimeout(() => {
+                            addLog("Sending automatic welcome message to start conversation", "info");
+                            socket.send(JSON.stringify({
+                                text: "Hello, I'm here for my therapy session.",
+                                voice: chatVoiceSelect.value
+                            }));
+
+                            // Add user message to chat
+                            addMessage("Hello, I'm here for my therapy session.", 'user');
+
+                            showStatusMessage('Starting conversation...');
+                        }, 1000);
+                    };
+
+                    // Listen for messages
+                    socket.onmessage = function(event) {
+                        addLog(`Received message: ${event.data.substring(0, 100)}...`, "info");
+
+                        try {
+                            const data = JSON.parse(event.data);
+
+                            // Handle transcription
+                            if (data.transcription) {
+                                addLog(`Received transcription: ${data.transcription}`, "info");
+                                messageInput.value = data.transcription;
+                                return;
+                            }
+
+                            // Handle error
+                            if (data.error) {
+                                addLog(`Error: ${data.error}`, "error");
+                                showStatusMessage(`Error: ${data.error}`);
+                                return;
+                            }
+
+                            // Handle AI response
+                            if (data.response) {
+                                addLog(`AI response: ${data.response.substring(0, 100)}...`, "success");
+
+                                // Add message to chat
+                                addMessage(
+                                    data.response,
+                                    'ai',
+                                    data.extracted_keywords,
+                                    data.audio,
+                                    data.response_id
+                                );
+
+                                // Update caption
+                                captionContainer.textContent = data.response;
+                            }
+                        } catch (error) {
+                            addLog(`Error parsing message: ${error.message}`, "error");
+                            showStatusMessage(`Error parsing response: ${error.message}`);
+                        }
+                    };
+
+                    // Connection closed
+                    socket.onclose = function(event) {
+                        addLog(`WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`, "info");
+                        connectionStatus.textContent = 'Disconnected';
+                        connectionStatus.className = 'disconnected';
+
+                        // Reset connect button
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = 'Connect';
+
+                        // Show login form if not already visible
+                        if (loginForm.classList.contains('d-none')) {
+                            loginForm.classList.remove('d-none');
+                            chatInterface.classList.add('d-none');
+                            chatInterface.classList.remove('d-flex');
+                            showStatusMessage('Disconnected from server. Please reconnect.');
+                        }
+
+                        // Stop all audio
+                        stopAllAudio();
+
+                        // Stop recording if active
+                        if (isRecording) {
+                            stopRecording();
+                        }
+                    };
+
+                    // Connection error
+                    socket.onerror = function(error) {
+                        addLog(`WebSocket error: ${error}`, "error");
+                        addLog(`WebSocket readyState: ${socket.readyState}`, "error");
+
+                        connectionStatus.textContent = 'Error';
+                        connectionStatus.className = 'disconnected';
+                        showStatusMessage('Error connecting to server. Please check your connection and try again.');
+
+                        // Reset connect button
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = 'Connect';
+                    };
+                } catch (error) {
+                    addLog(`Error creating WebSocket: ${error.message}`, "error");
+                    connectionStatus.textContent = 'Error';
+                    connectionStatus.className = 'disconnected';
+                    showStatusMessage(`Error: ${error.message}`);
+
+                    // Reset connect button
+                    connectBtn.disabled = false;
+                    connectBtn.innerHTML = 'Connect';
+                }
+            });
+
+            // Send button
+            sendBtn.addEventListener('click', function() {
+                sendMessage();
+            });
+
+            // Enter key to send
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Send message
+            function sendMessage() {
+                const message = messageInput.value.trim();
+
+                if (!message || !socket || socket.readyState !== WebSocket.OPEN) {
+                    return;
+                }
+
+                // Add message to chat
+                addMessage(message, 'user');
+                addLog(`Sent message: ${message}`, "info");
+
+                // Send message to server
+                socket.send(JSON.stringify({
+                    text: message,
+                    voice: chatVoiceSelect.value
+                }));
+
+                // Clear input
+                messageInput.value = '';
+            }
+
+            // Start recording
+            async function startRecording() {
+                if (isRecording) {
+                    // Already recording, don't start again
+                    addLog("Already recording, not starting again", "info");
+                    return;
+                }
+
+                // Clean up any existing resources first
+                cleanupRecordingResources();
+
+                try {
+                    addLog("Starting recording...", "info");
+
+                    // Get microphone stream with more explicit constraints
+                    micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            channelCount: 1, // Mono recording
+                            sampleRate: 44100 // Standard sample rate
+                        }
+                    });
+
+                    // Set up audio context for silence detection
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                        sampleRate: 44100
+                    });
+
+                    analyser = audioContext.createAnalyser();
+                    analyser.minDecibels = -90;
+                    analyser.maxDecibels = -10;
+                    analyser.smoothingTimeConstant = 0.85;
+
+                    const microphone = audioContext.createMediaStreamSource(micStream);
+                    microphone.connect(analyser);
+
+                    // Set a smaller FFT size for more frequent updates
+                    analyser.fftSize = 512;
+                    const bufferLength = analyser.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+
+                    // Create media recorder with explicit options
+                    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                        ? 'audio/webm;codecs=opus'
+                        : 'audio/webm';
+
+                    addLog(`Using MIME type: ${mimeType}`, "info");
+
+                    mediaRecorder = new MediaRecorder(micStream, {
+                        mimeType: mimeType,
+                        audioBitsPerSecond: 128000
+                    });
+
+                    audioChunks = [];
+
+                    // Set up event listeners
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                            addLog(`Data available: ${Math.round(event.data.size / 1024)} KB`, "info");
+                        }
+                    });
+
+                    mediaRecorder.addEventListener('start', () => {
+                        addLog("MediaRecorder started", "info");
+                    });
+
+                    mediaRecorder.addEventListener('error', (event) => {
+                        addLog(`MediaRecorder error: ${event.error}`, "error");
+                    });
+
+                    mediaRecorder.addEventListener('stop', () => {
+                        addLog("MediaRecorder stop event fired", "info");
+
+                        if (audioChunks.length === 0) {
+                            addLog("No audio chunks collected in stop event", "error");
+                            return;
+                        }
+
+                        const audioBlob = new Blob(audioChunks, {type: mimeType});
+                        addLog(`Audio blob created in stop event: ${Math.round(audioBlob.size / 1024)} KB`, "info");
+
+                        // Only process if we're not already processing (avoid duplicates)
+                        if (isRecording) {
+                            processAudioBlob(audioBlob);
+                        }
+                    });
+
+                    // Start recording with timeslice to get data periodically
+                    mediaRecorder.start(1000); // Get data every second
+                    isRecording = true;
+                    userHasSpoken = false; // Reset user speaking flag
+                    recordingStartTime = null; // Don't start timer yet
+
+                    // Show recording indicator with high visibility but with "Listening..." text
+                    recordingIndicator.style.display = 'flex';
+                    recordingIndicator.style.opacity = '1';
+                    recordingIndicator.querySelector('span').textContent = 'LISTENING...';
+                    silenceBar.style.display = 'block';
+
+                    // Initialize timer display but don't start it
+                    recordingTimer.textContent = '00:00';
+
+                    // Start silence detection
+                    silenceStartTime = null;
+                    volumeHistory = [];
+                    startSilenceDetection(dataArray, bufferLength);
+
+                    addLog("Started recording audio", "success");
+                    showStatusMessage('Recording audio...', false);
+
+                } catch (error) {
+                    addLog(`Error starting recording: ${error.message}`, "error");
+                    showStatusMessage(`Error accessing microphone: ${error.message}`);
+                    isRecording = false;
+
+                    // Clean up any partial resources
+                    cleanupRecordingResources();
+                }
+            }
+
+            // Update recording timer
+            function updateRecordingTimer() {
+                if (!recordingStartTime) return;
+
+                const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                recordingTimer.textContent = `${minutes}:${seconds}`;
+            }
+
+            // Start silence detection
+            function startSilenceDetection(dataArray, bufferLength) {
+                // Clear any existing interval
+                if (silenceDetectionInterval) {
+                    clearInterval(silenceDetectionInterval);
+                }
+
+                // Reset silence start time and volume history
+                silenceStartTime = null;
+                volumeHistory = [];
+
+                // Set a maximum recording time safety
+                const recordingStartedAt = Date.now();
+
+                // Create a more aggressive silence detection
+                let consecutiveSilenceFrames = 0;
+                const requiredSilenceFrames = 5; // Reduced from 10 to 5 for faster detection
+
+                silenceDetectionInterval = setInterval(() => {
+                    if (!isRecording) {
+                        clearInterval(silenceDetectionInterval);
+                        return;
+                    }
+
+                    // Check if we've exceeded maximum recording time
+                    const recordingDuration = Date.now() - recordingStartedAt;
+                    if (recordingDuration >= maxRecordingTime) {
+                        addLog(`Maximum recording time of ${maxRecordingTime/1000} seconds reached - stopping recording`, "warning");
+                        stopRecording();
+                        return;
+                    }
+
+                    // Get time domain data for RMS calculation
+                    analyser.getByteTimeDomainData(dataArray);
+
+                    // Calculate RMS (Root Mean Square) for volume - more accurate than simple average
+                    let sumSquares = 0;
+                    for (let i = 0; i < dataArray.length; i++) {
+                        const amplitude = (dataArray[i] - 128) / 128; // Normalize data from 0-255 to -1 to 1
+                        sumSquares += amplitude * amplitude;
+                    }
+                    const rms = Math.sqrt(sumSquares / dataArray.length);
+                    const volume = rms * 100; // Scale to a more readable number (0-100 range)
+
+                    // Get frequency data for additional check
+                    analyser.getByteFrequencyData(dataArray);
+
+                    // Calculate frequency-based volume
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    const freqAverage = sum / bufferLength / 255; // Normalize to 0-1
+
+                    // Add to volume history (keep last 10 readings)
+                    volumeHistory.push({ rms: volume, freq: freqAverage });
+                    if (volumeHistory.length > 10) {
+                        volumeHistory.shift();
+                    }
+
+                    // Calculate average volume over the last few readings
+                    const avgVolume = volumeHistory.reduce((sum, v) => sum + v.rms, 0) / volumeHistory.length;
+                    const avgFreq = volumeHistory.reduce((sum, v) => sum + v.freq, 0) / volumeHistory.length;
+
+                    // Log volume more frequently
+                    if (debugMode && Math.random() < 0.2) { // ~20% chance to log in debug mode
+                        addLog(`RMS: ${volume.toFixed(2)}, Freq: ${freqAverage.toFixed(4)}, Avg RMS: ${avgVolume.toFixed(2)}, Avg Freq: ${avgFreq.toFixed(4)}`, "info");
+                    }
+
+                    // Check if user is speaking (significant sound detected)
+                    const isSignificantSound = volume > significantSoundThreshold || freqAverage > silenceThreshold * 1.5;
+
+                    // If user hasn't spoken yet and we detect significant sound
+                    if (!userHasSpoken && isSignificantSound && !isAISpeaking) {
+                        userHasSpoken = true;
+                        recordingStartTime = Date.now();
+                        addLog(`User started speaking (RMS: ${volume.toFixed(2)}, Freq: ${freqAverage.toFixed(4)})`, "success");
+
+                        // Change recording indicator text
+                        recordingIndicator.querySelector('span').textContent = 'RECORDING';
+
+                        // Start recording timer
+                        updateRecordingTimer();
+                        if (recordingTimerInterval) {
+                            clearInterval(recordingTimerInterval);
+                        }
+                        recordingTimerInterval = setInterval(updateRecordingTimer, 1000);
+                    }
+
+                    // Check for silence - use both RMS and frequency data with more aggressive thresholds
+                    // Consider both current values and recent averages
+                    const isSilent = (volume < 1.5 || avgVolume < 2.0) && (freqAverage < silenceThreshold || avgFreq < silenceThreshold);
+
+                    if (isSilent) {
+                        consecutiveSilenceFrames++;
+
+                        // Only start the silence timer after several consecutive silent frames
+                        // AND if the user has spoken (don't start silence timer if user hasn't spoken yet)
+                        if (consecutiveSilenceFrames >= requiredSilenceFrames && userHasSpoken) {
+                            if (!silenceStartTime) {
+                                silenceStartTime = Date.now();
+                                addLog(`Silence detected (RMS: ${volume.toFixed(2)}, Freq: ${freqAverage.toFixed(4)})`, "info");
+                                // Make the silence bar more visible
+                                silenceBar.style.display = 'block';
+                                silenceBar.style.opacity = '1';
+                            }
+
+                            const silenceDuration = Date.now() - silenceStartTime;
+                            const silencePercentage = Math.min(100, (silenceDuration / silenceTimeout) * 100);
+
+                            // Update silence progress bar
+                            silenceProgress.style.width = `${silencePercentage}%`;
+
+                            // If silence has lasted long enough, stop recording
+                            if (silenceDuration >= silenceTimeout) {
+                                addLog(`${silenceTimeout/1000} seconds of silence detected - stopping recording`, "info");
+                                stopRecording();
+                            }
+                        }
+                    } else {
+                        // Reduce consecutive silence frames counter but don't reset completely
+                        // This makes the detection more forgiving of brief sounds
+                        consecutiveSilenceFrames = Math.max(0, consecutiveSilenceFrames - 2);
+
+                        // Only reset silence timer if we have a significant sound
+                        if (silenceStartTime && isSignificantSound) {
+                            addLog(`Silence broken (RMS: ${volume.toFixed(2)}, Freq: ${freqAverage.toFixed(4)})`, "info");
+                            silenceStartTime = null;
+                            silenceProgress.style.width = '0%';
+                        }
+                    }
+
+                    // Additional check: if we've been mostly silent for a while, stop recording
+                    // This catches cases where the volume is just above the threshold but there's no real speech
+                    // Only apply this check if the user has already spoken
+                    if (volumeHistory.length >= 10 && userHasSpoken) {
+                        const highVolumeCount = volumeHistory.filter(v => v.rms > 3.0 || v.freq > silenceThreshold * 1.5).length;
+                        if (highVolumeCount <= 2 && !silenceStartTime) { // If 80% of recent frames are low volume
+                            silenceStartTime = Date.now();
+                            addLog("Mostly silent period detected, starting silence timer", "info");
+                        }
+                    }
+                }, 100); // Check every 100ms
+            }
+
+            // Process audio blob
+            function processAudioBlob(audioBlob) {
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                    const base64data = reader.result.split(',')[1];
+
+                    // Send audio to server
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        addLog(`Sending audio (${Math.round(audioBlob.size / 1024)} KB) to server`, "info");
+
+                        socket.send(JSON.stringify({
+                            audio: base64data,
+                            voice: chatVoiceSelect.value
+                        }));
+
+                        showStatusMessage('Processing audio...', true);
+                    } else {
+                        addLog("Cannot send audio - WebSocket not connected", "error");
+                    }
+                };
+
+                reader.readAsDataURL(audioBlob);
+            }
+
+            // Stop recording
+            function stopRecording() {
+                if (!isRecording) return;
+
+                addLog("Stopping recording...", "info");
+
+                // Set recording flag to false immediately to prevent multiple calls
+                isRecording = false;
+
+                // Force stop after a short timeout if normal stop fails
+                const forceStopTimeout = setTimeout(() => {
+                    addLog("Force stopping recording after timeout", "warning");
+                    forceStopRecording();
+                }, 2000);
+
+                // Stop media recorder and handle data
+                if (mediaRecorder) {
+                    try {
+                        if (mediaRecorder.state === 'recording') {
+                            // Add event listener for dataavailable if not already added
+                            const handleDataAvailable = (event) => {
+                                audioChunks.push(event.data);
+                                addLog(`Data available event received: ${Math.round(event.data.size / 1024)} KB`, "info");
+                            };
+
+                            // Add event listener for stop if not already added
+                            const handleStop = () => {
+                                addLog("MediaRecorder stopped event fired", "info");
+                                clearTimeout(forceStopTimeout); // Clear the force stop timeout
+
+                                if (audioChunks.length === 0) {
+                                    addLog("No audio chunks collected", "error");
+                                    return;
+                                }
+
+                                const audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+                                addLog(`Audio blob created: ${Math.round(audioBlob.size / 1024)} KB`, "info");
+
+                                // Process the audio blob
+                                processAudioBlob(audioBlob);
+
+                                // Clean up event listeners
+                                try {
+                                    mediaRecorder.removeEventListener('dataavailable', handleDataAvailable);
+                                    mediaRecorder.removeEventListener('stop', handleStop);
+                                } catch (e) {
+                                    addLog(`Error removing event listeners: ${e.message}`, "error");
+                                }
+
+                                // Clean up resources
+                                cleanupRecordingResources();
+                            };
+
+                            // Add one-time event listeners
+                            mediaRecorder.addEventListener('dataavailable', handleDataAvailable);
+                            mediaRecorder.addEventListener('stop', handleStop);
+
+                            // Request data and stop
+                            try {
+                                mediaRecorder.requestData(); // Force dataavailable event
+                                addLog("MediaRecorder.requestData() called", "info");
+                            } catch (e) {
+                                addLog(`Error requesting data: ${e.message}`, "error");
+                            }
+
+                            try {
+                                mediaRecorder.stop();
+                                addLog("MediaRecorder.stop() called", "info");
+                            } catch (e) {
+                                addLog(`Error stopping media recorder: ${e.message}`, "error");
+                                clearTimeout(forceStopTimeout);
+                                forceStopRecording();
+                            }
+                        } else {
+                            addLog(`MediaRecorder was in ${mediaRecorder.state} state`, "info");
+                            clearTimeout(forceStopTimeout);
+
+                            // If we have audio chunks, process them anyway
+                            if (audioChunks.length > 0) {
+                                const audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+                                addLog(`Processing existing audio chunks: ${Math.round(audioBlob.size / 1024)} KB`, "info");
+                                processAudioBlob(audioBlob);
+                            }
+
+                            // Clean up resources
+                            cleanupRecordingResources();
+                        }
+                    } catch (error) {
+                        addLog(`Error in stopRecording: ${error.message}`, "error");
+                        clearTimeout(forceStopTimeout);
+                        forceStopRecording();
+                    }
+                } else {
+                    addLog("No mediaRecorder found", "warning");
+                    clearTimeout(forceStopTimeout);
+                    cleanupRecordingResources();
+                }
+            }
+
+            // Force stop recording (used as a fallback)
+            function forceStopRecording() {
+                addLog("Force stopping recording", "warning");
+
+                // Process any audio chunks we might have
+                if (audioChunks.length > 0) {
+                    const audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+                    addLog(`Processing audio chunks from force stop: ${Math.round(audioBlob.size / 1024)} KB`, "info");
+                    processAudioBlob(audioBlob);
+                }
+
+                // Clean up resources
+                cleanupRecordingResources();
+            }
+
+            // Clean up recording resources
+            function cleanupRecordingResources() {
+                // Reset audio chunks
+                audioChunks = [];
+
+                // Stop silence detection
+                if (silenceDetectionInterval) {
+                    clearInterval(silenceDetectionInterval);
+                    silenceDetectionInterval = null;
+                    addLog("Silence detection interval cleared", "info");
+                }
+
+                // Stop recording timer
+                if (recordingTimerInterval) {
+                    clearInterval(recordingTimerInterval);
+                    recordingTimerInterval = null;
+                    addLog("Recording timer interval cleared", "info");
+                }
+
+                // Hide recording indicator and silence bar
+                recordingIndicator.style.display = 'none';
+                silenceBar.style.display = 'none';
+                silenceProgress.style.width = '0%';
+
+                // Clean up audio resources
+                if (audioContext) {
+                    try {
+                        audioContext.close().catch(console.error);
+                    } catch (error) {
+                        console.error("Error closing audio context:", error);
+                    }
+                    audioContext = null;
+                    addLog("Audio context closed", "info");
+                }
+
+                if (micStream) {
+                    try {
+                        micStream.getTracks().forEach(track => track.stop());
+                    } catch (error) {
+                        console.error("Error stopping microphone tracks:", error);
+                    }
+                    micStream = null;
+                    addLog("Microphone stream tracks stopped", "info");
+                }
+
+                // Reset state variables
+                mediaRecorder = null;
+                recordingStartTime = null;
+                silenceStartTime = null;
+                volumeHistory = [];
+
+                addLog("Recording resources cleaned up", "info");
+            }
+
+            // Auto-connect when page loads
+            setTimeout(() => {
+                addLog("Auto-connecting...", "info");
+                connectBtn.click();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

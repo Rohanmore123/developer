@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Smart Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f8fa;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #chat-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            line-height: 1.4;
+            position: relative;
+            clear: both;
+        }
+        .doctor {
+            background-color: #dcf8c6;
+            float: right;
+            border-bottom-right-radius: 5px;
+        }
+        .assistant {
+            background-color: #f1f0f0;
+            float: left;
+            border-bottom-left-radius: 5px;
+        }
+        #input-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+        #message-input:focus {
+            border-color: #3498db;
+        }
+        button {
+            padding: 12px 20px;
+            margin-left: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        #doctor-id-container {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #connect-btn {
+            background-color: #2ecc71;
+            width: 100%;
+            margin-left: 0;
+            margin-top: 10px;
+        }
+        #connect-btn:hover {
+            background-color: #27ae60;
+        }
+        #status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .error {
+            background-color: #ffecec;
+            color: #e74c3c;
+            border: 1px solid #f5aca6;
+        }
+        .success {
+            background-color: #e7f9e7;
+            color: #2ecc71;
+            border: 1px solid #b6ecb6;
+        }
+        .warning {
+            background-color: #fff8e1;
+            color: #f39c12;
+            border: 1px solid #ffe0b2;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        #static-token-btn {
+            background-color: #9b59b6;
+            margin-top: 10px;
+            width: 100%;
+            margin-left: 0;
+        }
+        #static-token-btn:hover {
+            background-color: #8e44ad;
+        }
+    </style>
+</head>
+<body>
+    <h1>Doctor Smart Chat</h1>
+    
+    <div id="doctor-id-container">
+        <div class="input-group">
+            <label for="doctor-id">Doctor ID:</label>
+            <input type="text" id="doctor-id" placeholder="Enter your doctor ID" value="b81fcef7-158a-49d2-b22c-ca9b5f7de696">
+        </div>
+        
+        <div class="input-group">
+            <label for="jwt-token">JWT Token:</label>
+            <input type="text" id="jwt-token" placeholder="Enter your JWT token">
+        </div>
+        
+        <button id="static-token-btn">Use Static Token</button>
+        <button id="connect-btn">Connect</button>
+    </div>
+    
+    <div id="status">Not connected</div>
+    
+    <div id="chat-container"></div>
+    
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="Type your message..." disabled>
+        <button id="send-btn" disabled>Send</button>
+        <button id="mic-btn" disabled>🎤</button>
+    </div>
+    
+    <script>
+        let socket;
+        let isRecording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+        
+        const doctorIdInput = document.getElementById('doctor-id');
+        const jwtTokenInput = document.getElementById('jwt-token');
+        const staticTokenBtn = document.getElementById('static-token-btn');
+        const connectBtn = document.getElementById('connect-btn');
+        const statusDiv = document.getElementById('status');
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const micBtn = document.getElementById('mic-btn');
+        
+        // Static token for testing
+        const STATIC_JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGF0aWMtdXNlciIsImVtYWlsIjoic3RhdGljQGV4YW1wbGUuY29tIiwicm9sZXMiOiJhZG1pbixkb2N0b3IscGF0aWVudCJ9.3oZ2Ubh5rLBdHvQHd5Qr9GJczA5MXcxaVx5H5xLwvZ4";
+        
+        // Use static token
+        staticTokenBtn.addEventListener('click', () => {
+            jwtTokenInput.value = STATIC_JWT_TOKEN;
+            setStatus('Static token loaded', 'warning');
+        });
+        
+        // Connect to WebSocket
+        connectBtn.addEventListener('click', () => {
+            const doctorId = doctorIdInput.value.trim();
+            const jwtToken = jwtTokenInput.value.trim();
+            
+            if (!doctorId) {
+                setStatus('Please enter a doctor ID', 'error');
+                return;
+            }
+            
+            if (!jwtToken) {
+                setStatus('Please enter a JWT token', 'error');
+                return;
+            }
+            
+            // Close existing connection if any
+            if (socket) {
+                socket.close();
+            }
+            
+            // Create WebSocket URL with token as query parameter
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}/smart-chat-doc/${doctorId}?token=${encodeURIComponent(jwtToken)}`;
+            
+            try {
+                // Connect to WebSocket
+                socket = new WebSocket(wsUrl);
+                
+                setStatus('Connecting...', 'warning');
+                
+                // WebSocket event handlers
+                socket.onopen = () => {
+                    setStatus('Connected', 'success');
+                    enableChat(true);
+                    
+                    // Clear chat container
+                    chatContainer.innerHTML = '';
+                    
+                    // Add welcome message
+                    addMessage('assistant', 'Welcome, Doctor. How can I assist you today?');
+                };
+                
+                socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.error) {
+                        setStatus(`Error: ${data.error}`, 'error');
+                        addMessage('assistant', `Error: ${data.response}`);
+                    } else {
+                        addMessage('assistant', data.response);
+                    }
+                };
+                
+                socket.onclose = (event) => {
+                    if (event.code === 1000) {
+                        setStatus('Disconnected', 'warning');
+                    } else {
+                        setStatus(`Connection closed: ${event.reason || 'Unknown reason'}`, 'error');
+                    }
+                    enableChat(false);
+                };
+                
+                socket.onerror = (error) => {
+                    setStatus(`Connection error`, 'error');
+                    enableChat(false);
+                };
+            } catch (error) {
+                setStatus(`Connection error: ${error.message}`, 'error');
+            }
+        });
+        
+        // Send message
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !socket || socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+            
+            // Add message to chat
+            addMessage('doctor', message);
+            
+            // Send message to server
+            socket.send(JSON.stringify({ text: message }));
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Set status to indicate waiting for response
+            setStatus('Waiting for response...', 'warning');
+        }
+        
+        // Add message to chat
+        function addMessage(role, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', role);
+            messageDiv.textContent = text;
+            
+            const clearfix = document.createElement('div');
+            clearfix.classList.add('clearfix');
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.appendChild(clearfix);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Set status message
+        function setStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = type;
+        }
+        
+        // Enable/disable chat inputs
+        function enableChat(enabled) {
+            messageInput.disabled = !enabled;
+            sendBtn.disabled = !enabled;
+            micBtn.disabled = !enabled;
+            
+            if (enabled) {
+                messageInput.focus();
+            }
+        }
+        
+        // Voice recording
+        micBtn.addEventListener('click', toggleRecording);
+        
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+        
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = sendAudio;
+                
+                mediaRecorder.start();
+                isRecording = true;
+                micBtn.textContent = '⏹️';
+                setStatus('Recording...', 'warning');
+            } catch (error) {
+                setStatus(`Microphone error: ${error.message}`, 'error');
+            }
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.textContent = '🎤';
+                setStatus('Processing audio...', 'warning');
+            }
+        }
+        
+        function sendAudio() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+            const reader = new FileReader();
+            
+            reader.onload = () => {
+                const base64Audio = reader.result.split(',')[1];
+                
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({ audio: base64Audio }));
+                    setStatus('Sending audio...', 'warning');
+                }
+            };
+            
+            reader.readAsDataURL(audioBlob);
+        }
+        
+        // Initialize with default values
+        window.onload = () => {
+            // Pre-fill the doctor ID field with a sample ID
+            if (!doctorIdInput.value) {
+                doctorIdInput.value = "b81fcef7-158a-49d2-b22c-ca9b5f7de696";
+            }
+        };
+    </script>
+</body>
+</html>

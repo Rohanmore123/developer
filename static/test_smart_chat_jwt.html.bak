@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Chat API Test with Static JWT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #e6f7ff;
+            text-align: right;
+        }
+        .ai-message {
+            background-color: #f2f2f2;
+        }
+        #message-form {
+            display: flex;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 8px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #ffffcc;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Chat API Test with Static JWT</h1>
+
+    <div class="status" id="connection-status">Status: Disconnected</div>
+
+    <div>
+        <label for="patient-id">Patient ID:</label>
+        <input type="text" id="patient-id" value="a07b24f2-5eda-4dd7-b5c4-ddef1226b8a2" style="width: 300px;">
+        <button id="connect-btn">Connect</button>
+        <button id="disconnect-btn" disabled>Disconnect</button>
+    </div>
+
+    <div id="chat-container"></div>
+
+    <form id="message-form">
+        <input type="text" id="message-input" placeholder="Type your message..." disabled>
+        <button type="submit" id="send-btn" disabled>Send</button>
+    </form>
+
+    <script>
+        // Static JWT token
+        const staticJwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGF0aWMtdXNlciIsImVtYWlsIjoic3RhdGljQGV4YW1wbGUuY29tIiwicm9sZXMiOiJhZG1pbixkb2N0b3IscGF0aWVudCJ9.3oZ2Ubh5rLBdHvQHd5Qr9GJczA5MXcxaVx5H5xLwvZ4';
+
+        // DOM elements
+        const patientIdInput = document.getElementById('patient-id');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const messageForm = document.getElementById('message-form');
+        const chatContainer = document.getElementById('chat-container');
+        const connectionStatus = document.getElementById('connection-status');
+
+        let socket = null;
+
+        // Connect to WebSocket
+        connectBtn.addEventListener('click', () => {
+            const patientId = patientIdInput.value.trim();
+            if (!patientId) {
+                updateStatus('Please enter a patient ID', true);
+                return;
+            }
+
+            // First validate the patient
+            validatePatient(patientId);
+        });
+
+        // Validate patient before connecting
+        function validatePatient(patientId) {
+            updateStatus('Validating patient...');
+
+            fetch(`/validate-patient/${patientId}`, {
+                headers: {
+                    'Authorization': `Bearer ${staticJwtToken}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Patient validation failed: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateStatus(`Patient validated: ${data.patient_name}`);
+                connectWebSocket(patientId);
+            })
+            .catch(error => {
+                updateStatus(`Error: ${error.message}`, true);
+            });
+        }
+
+        // Connect to WebSocket after patient validation
+        function connectWebSocket(patientId) {
+            try {
+                // Close existing connection if any
+                if (socket) {
+                    socket.close();
+                }
+
+                // Create WebSocket connection with token
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/smart-chat/${patientId}?token=${staticJwtToken}`;
+
+                updateStatus('Connecting to WebSocket with JWT token...');
+
+                socket = new WebSocket(wsUrl);
+
+                // Connection opened
+                socket.addEventListener('open', (event) => {
+                    updateStatus('Connected to Smart Chat API');
+                    enableChat();
+                });
+
+                // Listen for messages
+                socket.addEventListener('message', (event) => {
+                    const data = JSON.parse(event.data);
+                    displayMessage(data.response, 'ai');
+
+                    // Log extracted keywords if any
+                    if (data.extracted_keywords && data.extracted_keywords.length > 0) {
+                        console.log('Extracted keywords:', data.extracted_keywords);
+                    }
+                });
+
+                // Connection closed
+                socket.addEventListener('close', (event) => {
+                    updateStatus('Disconnected from Smart Chat API');
+                    disableChat();
+                });
+
+                // Connection error
+                socket.addEventListener('error', (event) => {
+                    updateStatus('WebSocket error', true);
+                    console.error('WebSocket error:', event);
+                    disableChat();
+                });
+
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        // Disconnect from WebSocket
+        disconnectBtn.addEventListener('click', () => {
+            if (socket) {
+                socket.close();
+                updateStatus('Disconnected from Smart Chat API');
+                disableChat();
+            }
+        });
+
+        // Send message
+        messageForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const message = messageInput.value.trim();
+            if (!message || !socket) return;
+
+            // Send message to server
+            socket.send(JSON.stringify({ text: message }));
+
+            // Display user message
+            displayMessage(message, 'user');
+
+            // Clear input
+            messageInput.value = '';
+        });
+
+        // Display message in chat container
+        function displayMessage(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+            messageElement.textContent = message;
+
+            chatContainer.appendChild(messageElement);
+
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Update connection status
+        function updateStatus(message, isError = false) {
+            connectionStatus.textContent = `Status: ${message}`;
+            connectionStatus.classList.toggle('error', isError);
+        }
+
+        // Enable chat interface
+        function enableChat() {
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = false;
+        }
+
+        // Disable chat interface
+        function disableChat() {
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            connectBtn.disabled = false;
+            disconnectBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>

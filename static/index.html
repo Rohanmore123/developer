@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health AI Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 1.5rem;
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+        .card-header {
+            background-color: #4a6fa5;
+            color: white;
+            border-top-left-radius: 10px !important;
+            border-top-right-radius: 10px !important;
+            padding: 1rem;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #4a6fa5;
+        }
+        .btn-primary {
+            background-color: #4a6fa5;
+            border-color: #4a6fa5;
+        }
+        .btn-primary:hover {
+            background-color: #3a5a8f;
+            border-color: #3a5a8f;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <div class="container">
+            <h1><i class="fas fa-brain me-2"></i> Mental Health AI Platform</h1>
+            <p class="lead">Advanced AI-powered tools for mental health support and analysis</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-comments me-2"></i> Smart Chat</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="card-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h5 class="card-title">AI Chat Assistant</h5>
+                        <p class="card-text">Chat with our AI assistant for mental health support and information.</p>
+                        <a href="/smart-chat-simple" class="btn btn-primary">Start Chatting</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user-md me-2"></i> Doctor Chat</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="card-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <h5 class="card-title">Doctor Interface</h5>
+                        <p class="card-text">Specialized chat interface for healthcare professionals.</p>
+                        <a href="/doctor-chat" class="btn btn-primary">Doctor Portal</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-microphone me-2"></i> Audio Chat</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="card-icon">
+                            <i class="fas fa-headphones"></i>
+                        </div>
+                        <h5 class="card-title">Voice-Enabled AI Chat</h5>
+                        <p class="card-text">Talk to our AI assistant and receive voice responses for a more natural interaction.</p>
+                        <a href="/audio-chat" class="btn btn-primary">Start Voice Chat</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-file-pdf me-2"></i> PDF Upload</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="card-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <h5 class="card-title">Document Processing</h5>
+                        <p class="card-text">Upload PDF documents for AI analysis and information extraction.</p>
+                        <a href="/pdf-upload" class="btn btn-primary">Upload Documents</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> API Documentation</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="card-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h5 class="card-title">Developer Resources</h5>
+                        <p class="card-text">Access API documentation and integration guides for developers.</p>
+                        <a href="/docs" class="btn btn-primary">View API Docs</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-lock me-2"></i> Authentication</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="card-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <h5 class="card-title">User Authentication</h5>
+                        <p class="card-text">Manage your account and authentication tokens for secure access.</p>
+                        <a href="/auth/login" class="btn btn-primary">Login / Register</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer text-center">
+        <div class="container">
+            <p>© 2025 Mental Health AI Platform. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

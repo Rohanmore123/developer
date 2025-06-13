@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Therapy Talk</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .chat-header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 15px 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .chat-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .avatar-container {
+            width: 40%;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+        .avatar-image {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .caption-container {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            width: 90%;
+            text-align: center;
+            font-size: 1.1rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-messages {
+            width: 60%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease-in-out;
+            line-height: 1.5;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #e3f2fd;
+            border-bottom-right-radius: 5px;
+            color: #333;
+        }
+        .ai-message {
+            align-self: flex-start;
+            background-color: #f0f2f5;
+            border-bottom-left-radius: 5px;
+            color: #333;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+        .chat-input input:focus {
+            border-color: #4a6fa5;
+            box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+        }
+        .btn-send {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-send:hover {
+            background-color: #3a5a8f;
+        }
+        .btn-mic {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-mic:hover {
+            background-color: #3a5a8f;
+        }
+        .btn-mic.recording {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+        .btn-mic.listening {
+            background-color: #28a745;
+            animation: pulse 1.5s infinite;
+        }
+        .btn-mic.thinking {
+            background-color: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .listening-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(40, 167, 69, 0.8);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .listening-indicator.hidden {
+            display: none;
+        }
+        .listening-waves {
+            display: flex;
+            align-items: center;
+            height: 15px;
+        }
+        .listening-waves span {
+            display: inline-block;
+            width: 3px;
+            height: 100%;
+            background-color: white;
+            margin: 0 1px;
+            border-radius: 1px;
+            animation: wave 0.8s infinite ease-in-out;
+        }
+        .listening-waves span:nth-child(1) { animation-delay: 0s; }
+        .listening-waves span:nth-child(2) { animation-delay: 0.1s; }
+        .listening-waves span:nth-child(3) { animation-delay: 0.2s; }
+        .listening-waves span:nth-child(4) { animation-delay: 0.3s; }
+        .listening-waves span:nth-child(5) { animation-delay: 0.4s; }
+        @keyframes wave {
+            0%, 100% { height: 4px; }
+            50% { height: 15px; }
+        }
+        .voice-select {
+            width: auto;
+            padding: 5px;
+            border-radius: 20px;
+            border: 1px solid #ced4da;
+            background-color: #f8f9fa;
+            color: #4a6fa5;
+            font-size: 0.9rem;
+            margin-right: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .voice-select:hover, .voice-select:focus {
+            border-color: #4a6fa5;
+            box-shadow: 0 0 0 0.1rem rgba(74, 111, 165, 0.25);
+        }
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .keyword {
+            background-color: rgba(74, 111, 165, 0.2);
+            color: #4a6fa5;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            margin: 0 1px;
+            background-color: #666;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: 0.1s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typing {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        .status-bar {
+            padding: 5px 15px;
+            background-color: #e9ecef;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .status-bar.fade-out {
+            opacity: 0;
+        }
+        .transcription {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .audio-controls button {
+            background: none;
+            border: none;
+            color: #4a6fa5;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            margin-right: 10px;
+            transition: all 0.2s ease;
+        }
+        .audio-controls button:hover {
+            color: #3a5a8f;
+            transform: scale(1.1);
+        }
+        .audio-controls .play-btn {
+            color: #4a6fa5;
+        }
+        .audio-controls .pause-btn {
+            color: #e74c3c;
+        }
+        .hidden {
+            display: none;
+        }
+        #connectionStatus {
+            font-weight: bold;
+        }
+        .connected {
+            color: green;
+        }
+        .disconnected {
+            color: red;
+        }
+        .connecting {
+            color: orange;
+        }
+        .speaking {
+            animation: speaking 1s infinite alternate;
+        }
+        @keyframes speaking {
+            from { box-shadow: 0 0 5px rgba(74, 111, 165, 0.5); }
+            to { box-shadow: 0 0 20px rgba(74, 111, 165, 0.8); }
+        }
+        .log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        .log-entry {
+            margin: 2px 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 2px;
+        }
+        .log-entry.error {
+            color: #dc3545;
+        }
+        .log-entry.success {
+            color: #28a745;
+        }
+        .log-entry.info {
+            color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid d-flex flex-column h-100 py-3">
+        <div class="chat-container flex-grow-1">
+            <div class="chat-header">
+                <h2><i class="fas fa-comments me-2"></i> AI Therapy Talk</h2>
+                <div class="d-flex align-items-center">
+                    <button id="stopAllAudioBtn" class="btn btn-sm btn-outline-light me-3" title="Stop all audio playback" style="display: none;">
+                        <i class="fas fa-volume-mute me-1"></i> Stop Audio
+                    </button>
+                    <span id="connectionStatus" class="disconnected">Disconnected</span>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div id="statusMessage">Please enter your patient ID and token to connect</div>
+            </div>
+            <div id="loginForm" class="p-4">
+                <div class="mb-3">
+                    <label for="patientId" class="form-label">Patient ID</label>
+                    <input type="text" class="form-control" id="patientId" value="f31a95c6-76ef-4bb2-936c-b258285682d9" required>
+                </div>
+                <div class="mb-3">
+                    <label for="token" class="form-label">Authentication Token</label>
+                    <input type="text" class="form-control" id="token" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMzFhOTVjNi03NmVmLTRiYjItOTM2Yy1iMjU4Mjg1NjgyZDkiLCJyb2xlcyI6InBhdGllbnQiLCJleHAiOjE3MTU2MTYwMDB9.Ij0BnOgMwKFwB7VOzRdL-qdpEXNF7YvZZ8R_c-vKbcM" required>
+                </div>
+                <div class="mb-3">
+                    <label for="voiceSelect" class="form-label">Therapist Voice</label>
+                    <select class="form-select" id="voiceSelect">
+                        <option value="nova" selected>Nova (Female, Soft)</option>
+                        <option value="alloy">Alloy (Neutral)</option>
+                        <option value="echo">Echo (Male)</option>
+                        <option value="fable">Fable (Female)</option>
+                        <option value="onyx">Onyx (Male, Deep)</option>
+                        <option value="shimmer">Shimmer (Female, Clear)</option>
+                    </select>
+                </div>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Auto-Listening Mode:</strong> The system will automatically listen for your voice after the AI finishes speaking, and will stop listening after 3 seconds of silence.
+                </div>
+                <button id="connectBtn" class="btn btn-primary">Connect</button>
+                <div class="log mt-3" id="log">
+                    <div class="log-entry info">Connection log will appear here...</div>
+                </div>
+            </div>
+            <div id="chatInterface" class="d-none flex-grow-1 d-flex flex-column">
+                <div class="chat-body">
+                    <div class="avatar-container">
+                        <img src="https://img.freepik.com/free-photo/portrait-smiling-young-woman-doctor-with-stethoscope-around-neck-standing-with-arms-crossed-white-coat_1258-88108.jpg"
+                             alt="Therapist Avatar"
+                             class="avatar-image"
+                             id="therapistAvatar">
+                        <div class="caption-container" id="captionContainer">
+                            Welcome to your therapy session
+                        </div>
+                        <div class="listening-indicator hidden" id="listeningIndicator">
+                            <div class="listening-waves">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span>Listening...</span>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be added here -->
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Type your message here..." autocomplete="off">
+                    <select id="chatVoiceSelect" class="voice-select" title="Select therapist voice">
+                        <option value="nova" selected>Nova</option>
+                        <option value="alloy">Alloy</option>
+                        <option value="echo">Echo</option>
+                        <option value="fable">Fable</option>
+                        <option value="onyx">Onyx</option>
+                        <option value="shimmer">Shimmer</option>
+                    </select>
+                    <button id="micBtn" class="btn-mic"><i class="fas fa-microphone"></i></button>
+                    <button id="sendBtn" class="btn-send"><i class="fas fa-paper-plane"></i></button>
+                    <button id="forceStopBtn" class="btn btn-danger btn-sm ms-2" style="display: none;">Force Stop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // UI Elements
+            const connectBtn = document.getElementById('connectBtn');
+            const patientIdInput = document.getElementById('patientId');
+            const tokenInput = document.getElementById('token');
+            const voiceSelect = document.getElementById('voiceSelect');
+            const chatVoiceSelect = document.getElementById('chatVoiceSelect');
+            const loginForm = document.getElementById('loginForm');
+            const chatInterface = document.getElementById('chatInterface');
+            const chatMessages = document.getElementById('chatMessages');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const micBtn = document.getElementById('micBtn');
+            const forceStopBtn = document.getElementById('forceStopBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const statusMessage = document.getElementById('statusMessage');
+            const statusBar = document.querySelector('.status-bar');
+            const stopAllAudioBtn = document.getElementById('stopAllAudioBtn');
+            const therapistAvatar = document.getElementById('therapistAvatar');
+            const captionContainer = document.getElementById('captionContainer');
+            const listeningIndicator = document.getElementById('listeningIndicator');
+            // No longer using continuousModeSwitch as it's always enabled
+            const logDiv = document.getElementById('log');
+
+            // State variables
+            let socket = null;
+            let mediaRecorder = null;
+            let audioChunks = [];
+            let isRecording = false;
+            let isListening = false;
+            let isContinuousMode = true; // Always enabled
+            let currentAudio = null;
+            let audioElements = {};
+            let silenceTimer = null;
+            let audioContext = null;
+            let analyser = null;
+            let micStream = null;
+            let silenceDetectionThreshold = 0.015; // Slightly higher threshold to ignore background noise
+            let silenceDetectionTime = 2000; // 2 seconds of silence to trigger end (reduced from 3)
+            let isAISpeaking = false; // Track if AI is currently speaking
+            let patientSpeechBuffer = []; // Buffer to store patient speech while AI is speaking
+            let autoListeningEnabled = true; // Always enable auto-listening
+            let speechEndDetectionEnabled = true; // Enable speech end detection
+            let volumeHistory = []; // Store recent volume levels to detect speech patterns
+            let volumeHistoryMaxLength = 30; // Number of frames to keep in history
+            let speechEndDetectionMinTime = 1000; // Minimum time of speech before we start looking for end
+            let speechStartTime = null; // When speech started
+            let forceSilenceDetection = false; // Flag to force silence detection
+
+            // Add log entry
+            function addLog(message, type = 'info') {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                logDiv.appendChild(entry);
+                logDiv.scrollTop = logDiv.scrollHeight;
+
+                // Also log to console
+                console.log(`[${type}] ${message}`);
+            }
+
+            // Function to show status messages
+            function showStatusMessage(message, autoHide = true) {
+                statusMessage.textContent = message;
+                statusBar.classList.remove('fade-out');
+
+                if (autoHide) {
+                    setTimeout(() => {
+                        statusBar.classList.add('fade-out');
+                    }, 3000);
+                }
+            }
+
+            // Function to scroll chat to bottom
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Function to add a message to the chat
+            function addMessage(text, sender, keywords = [], audioData = null, responseId = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+
+                // Add message text
+                const messageText = document.createElement('div');
+                messageText.textContent = text;
+                messageDiv.appendChild(messageText);
+
+                // Add timestamp
+                const timestamp = document.createElement('div');
+                timestamp.className = 'message-time';
+                timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageDiv.appendChild(timestamp);
+
+                // Add keywords for AI messages
+                if (sender === 'ai' && keywords && keywords.length > 0) {
+                    const keywordsDiv = document.createElement('div');
+                    keywordsDiv.className = 'keywords';
+
+                    keywords.forEach(keyword => {
+                        const keywordSpan = document.createElement('span');
+                        keywordSpan.className = 'keyword';
+                        keywordSpan.textContent = keyword;
+                        keywordsDiv.appendChild(keywordSpan);
+                    });
+
+                    messageDiv.appendChild(keywordsDiv);
+                }
+
+                // Add audio controls for AI messages
+                if (sender === 'ai' && audioData) {
+                    const audioControlsDiv = document.createElement('div');
+                    audioControlsDiv.className = 'audio-controls';
+
+                    // Create audio element
+                    const audio = new Audio(`data:audio/mp3;base64,${audioData}`);
+
+                    if (responseId) {
+                        audioElements[responseId] = audio;
+                    }
+
+                    // Play button
+                    const playBtn = document.createElement('button');
+                    playBtn.className = 'play-btn';
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play audio';
+
+                    // Pause button
+                    const pauseBtn = document.createElement('button');
+                    pauseBtn.className = 'pause-btn';
+                    pauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    pauseBtn.title = 'Pause audio';
+                    pauseBtn.style.display = 'none';
+
+                    // Add event listeners
+                    playBtn.addEventListener('click', () => {
+                        // Stop any currently playing audio
+                        stopAllAudio();
+
+                        // Set AI speaking flag
+                        isAISpeaking = true;
+
+                        // Play this audio
+                        audio.play();
+                        currentAudio = audio;
+
+                        // Show stop all audio button
+                        stopAllAudioBtn.style.display = 'block';
+
+                        // Toggle buttons
+                        playBtn.style.display = 'none';
+                        pauseBtn.style.display = 'inline';
+
+                        // Add speaking effect to avatar
+                        therapistAvatar.classList.add('speaking');
+
+                        // Update caption
+                        captionContainer.textContent = text;
+
+                        // Make sure we're still listening to the patient even while AI speaks
+                        if (!isListening) {
+                            startContinuousListening(true); // true = quiet mode (don't show indicators)
+                        }
+                    });
+
+                    pauseBtn.addEventListener('click', () => {
+                        audio.pause();
+
+                        // Toggle buttons
+                        playBtn.style.display = 'inline';
+                        pauseBtn.style.display = 'none';
+
+                        // Remove speaking effect
+                        therapistAvatar.classList.remove('speaking');
+
+                        // Set AI speaking flag
+                        isAISpeaking = false;
+                    });
+
+                    // Handle audio ending
+                    audio.addEventListener('ended', () => {
+                        playBtn.style.display = 'inline';
+                        pauseBtn.style.display = 'none';
+
+                        // Remove speaking effect
+                        therapistAvatar.classList.remove('speaking');
+
+                        // Reset current audio
+                        currentAudio = null;
+
+                        // Set AI speaking flag
+                        isAISpeaking = false;
+
+                        // Process any buffered speech from the patient
+                        processBufferedSpeech();
+
+                        // Automatically start listening when AI finishes speaking
+                        addLog("AI finished speaking, automatically starting to listen", "info");
+
+                        // Force stop any existing listening/recording
+                        if (isListening || isRecording) {
+                            stopContinuousListening();
+                            stopRecording();
+                        }
+
+                        // Small delay to ensure audio processing is complete
+                        setTimeout(() => {
+                            // Force start listening regardless of current state
+                            startContinuousListening();
+                            showStatusMessage('Listening for your response...', true);
+
+                            // Make the listening indicator more visible
+                            listeningIndicator.classList.remove('hidden');
+                            listeningIndicator.style.backgroundColor = 'rgba(40, 167, 69, 0.9)';
+                            listeningIndicator.style.padding = '8px 20px';
+                            listeningIndicator.style.fontSize = '1.1rem';
+
+                            // Show force stop button
+                            forceStopBtn.style.display = 'inline-block';
+                        }, 500);
+                    });
+
+                    // Add buttons to controls
+                    audioControlsDiv.appendChild(playBtn);
+                    audioControlsDiv.appendChild(pauseBtn);
+
+                    // Add controls to message
+                    messageDiv.appendChild(audioControlsDiv);
+
+                    // Auto-play the audio for AI messages
+                    setTimeout(() => {
+                        playBtn.click();
+                    }, 500);
+                }
+
+                // Add message to chat
+                chatMessages.appendChild(messageDiv);
+
+                // Scroll to bottom
+                scrollToBottom();
+            }
+
+            // Function to stop all audio playback
+            function stopAllAudio() {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+
+                // Stop all audio elements
+                Object.values(audioElements).forEach(audio => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                });
+
+                // Remove speaking effect
+                therapistAvatar.classList.remove('speaking');
+
+                // Reset caption
+                captionContainer.textContent = "Therapy session in progress";
+
+                // Hide stop button
+                stopAllAudioBtn.style.display = 'none';
+
+                // Set AI speaking flag
+                isAISpeaking = false;
+            }
+
+            // Stop all audio button
+            stopAllAudioBtn.addEventListener('click', stopAllAudio);
+
+            // Connect to WebSocket
+            connectBtn.addEventListener('click', function() {
+                addLog("Connect button clicked", "info");
+
+                // Get values
+                const patientId = patientIdInput.value.trim();
+                const token = tokenInput.value.trim();
+
+                if (!patientId) {
+                    alert('Please enter a patient ID');
+                    addLog("Missing patient ID", "error");
+                    return;
+                }
+
+                if (!token) {
+                    alert('Please enter an authentication token');
+                    addLog("Missing token", "error");
+                    return;
+                }
+
+                // Update UI
+                connectBtn.disabled = true;
+                connectBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Connecting...';
+                connectionStatus.textContent = 'Connecting...';
+                connectionStatus.className = 'connecting';
+                showStatusMessage('Connecting to server...', false);
+
+                // Continuous mode is always enabled
+                isContinuousMode = true;
+                addLog(`Continuous mode: enabled`, "info");
+
+                // Create WebSocket connection
+                try {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ai-talk/${patientId}?token=${token}`;
+                    addLog(`Connecting to WebSocket URL: ${wsUrl}`, "info");
+
+                    // Close existing socket if any
+                    if (socket) {
+                        socket.close();
+                        addLog("Closing existing WebSocket connection", "info");
+                    }
+
+                    socket = new WebSocket(wsUrl);
+
+                    // Connection opened
+                    socket.onopen = function(event) {
+                        addLog("WebSocket connection established", "success");
+                        connectionStatus.textContent = 'Connected';
+                        connectionStatus.className = 'connected';
+                        showStatusMessage('Connected to AI therapist');
+
+                        // Show chat interface, hide login form
+                        loginForm.classList.add('d-none');
+                        chatInterface.classList.remove('d-none');
+                        chatInterface.classList.add('d-flex');
+
+                        // Sync the voice selection from login form to chat interface
+                        chatVoiceSelect.value = voiceSelect.value;
+
+                        // Automatically send a welcome message to start the conversation
+                        setTimeout(() => {
+                            addLog("Sending automatic welcome message to start conversation", "info");
+                            socket.send(JSON.stringify({
+                                text: "Hello, I'm here for my therapy session.",
+                                voice: chatVoiceSelect.value
+                            }));
+
+                            // Add user message to chat
+                            addMessage("Hello, I'm here for my therapy session.", 'user');
+
+                            showStatusMessage('Starting conversation...');
+
+                            // Make sure the microphone button shows the correct state
+                            micBtn.classList.add('listening');
+                            micBtn.innerHTML = '<i class="fas fa-ear-listen"></i>';
+                        }, 1000);
+                    };
+
+                    // Listen for messages
+                    socket.onmessage = function(event) {
+                        addLog(`Received message: ${event.data.substring(0, 100)}...`, "info");
+
+                        try {
+                            const data = JSON.parse(event.data);
+
+                            // Handle transcription
+                            if (data.transcription) {
+                                addLog(`Received transcription: ${data.transcription}`, "info");
+                                messageInput.value = data.transcription;
+                                return;
+                            }
+
+                            // Handle error
+                            if (data.error) {
+                                addLog(`Error: ${data.error}`, "error");
+                                showStatusMessage(`Error: ${data.error}`);
+                                return;
+                            }
+
+                            // Handle AI response
+                            if (data.response) {
+                                addLog(`AI response: ${data.response.substring(0, 100)}...`, "success");
+
+                                // Reset mic button state if it was in thinking mode
+                                if (micBtn.classList.contains('thinking')) {
+                                    micBtn.classList.remove('thinking');
+                                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                                }
+
+                                // Add message to chat
+                                addMessage(
+                                    data.response,
+                                    'ai',
+                                    data.extracted_keywords,
+                                    data.audio,
+                                    data.response_id
+                                );
+
+                                // Update caption
+                                captionContainer.textContent = data.response;
+                            }
+                        } catch (error) {
+                            addLog(`Error parsing message: ${error.message}`, "error");
+                            showStatusMessage(`Error parsing response: ${error.message}`);
+                        }
+                    };
+
+                    // Connection closed
+                    socket.onclose = function(event) {
+                        addLog(`WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`, "info");
+                        connectionStatus.textContent = 'Disconnected';
+                        connectionStatus.className = 'disconnected';
+
+                        // Reset connect button
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = 'Connect';
+
+                        // Show login form if not already visible
+                        if (loginForm.classList.contains('d-none')) {
+                            loginForm.classList.remove('d-none');
+                            chatInterface.classList.add('d-none');
+                            chatInterface.classList.remove('d-flex');
+                            showStatusMessage('Disconnected from server. Please reconnect.');
+                        }
+
+                        // Stop all audio
+                        stopAllAudio();
+
+                        // Stop listening if active
+                        if (isListening) {
+                            stopContinuousListening();
+                        }
+                    };
+
+                    // Connection error
+                    socket.onerror = function(error) {
+                        addLog(`WebSocket error: ${error}`, "error");
+                        addLog(`WebSocket readyState: ${socket.readyState}`, "error");
+                        addLog(`Patient ID: ${patientId}`, "info");
+                        addLog(`Token: ${token.substring(0, 10)}...`, "info");
+
+                        connectionStatus.textContent = 'Error';
+                        connectionStatus.className = 'disconnected';
+                        showStatusMessage('Error connecting to server. Please check your connection and try again.');
+
+                        // Reset connect button
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = 'Connect';
+                    };
+                } catch (error) {
+                    addLog(`Error creating WebSocket: ${error.message}`, "error");
+                    connectionStatus.textContent = 'Error';
+                    connectionStatus.className = 'disconnected';
+                    showStatusMessage(`Error: ${error.message}`);
+
+                    // Reset connect button
+                    connectBtn.disabled = false;
+                    connectBtn.innerHTML = 'Connect';
+                }
+            });
+
+            // Send button
+            sendBtn.addEventListener('click', function() {
+                sendMessage();
+            });
+
+            // Enter key to send
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Send message
+            function sendMessage() {
+                const message = messageInput.value.trim();
+
+                if (!message || !socket || socket.readyState !== WebSocket.OPEN) {
+                    return;
+                }
+
+                // Add message to chat
+                addMessage(message, 'user');
+                addLog(`Sent message: ${message}`, "info");
+
+                // Send message to server
+                socket.send(JSON.stringify({
+                    text: message,
+                    voice: chatVoiceSelect.value
+                }));
+
+                // Clear input
+                messageInput.value = '';
+            }
+
+            // Microphone button
+            micBtn.addEventListener('click', function() {
+                if (isRecording || isListening) {
+                    stopRecording();
+                    stopContinuousListening();
+                    addLog("Stopped recording/listening", "info");
+
+                    // Hide force stop button
+                    forceStopBtn.style.display = 'none';
+                } else {
+                    if (isContinuousMode) {
+                        startContinuousListening();
+                        addLog("Started continuous listening", "info");
+
+                        // Show force stop button when recording starts
+                        forceStopBtn.style.display = 'inline-block';
+                    } else {
+                        startRecording();
+                        addLog("Started recording", "info");
+
+                        // Show force stop button when recording starts
+                        forceStopBtn.style.display = 'inline-block';
+                    }
+                }
+            });
+
+            // Force stop button
+            forceStopBtn.addEventListener('click', function() {
+                addLog("Force stop button clicked", "info");
+
+                // Force silence detection
+                forceSilenceDetection = true;
+
+                // Show processing indicator
+                showStatusMessage('Processing your response...', true);
+
+                // Update UI immediately
+                listeningIndicator.classList.add('hidden');
+                micBtn.classList.remove('listening');
+                micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+                // Stop recording and listening
+                stopRecording();
+                stopContinuousListening();
+
+                // Hide force stop button
+                forceStopBtn.style.display = 'none';
+            });
+
+            // Continuous mode is always enabled, no toggle needed
+
+            // Start continuous listening mode
+            async function startContinuousListening(quietMode = false) {
+                // If already listening or recording, stop first to ensure a clean start
+                if (isListening || isRecording) {
+                    stopContinuousListening();
+                    stopRecording();
+                    // Small delay to ensure cleanup is complete
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+
+                try {
+                    // Show listening indicator (unless in quiet mode)
+                    if (!quietMode) {
+                        listeningIndicator.classList.remove('hidden');
+
+                        // Update mic button
+                        micBtn.classList.add('listening');
+                        micBtn.innerHTML = '<i class="fas fa-ear-listen"></i>';
+
+                        addLog("Started listening for speech", "info");
+                        showStatusMessage('Listening for your response...', true);
+                    }
+
+                    // Get microphone stream
+                    micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    // Set up audio context for volume detection
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    const microphone = audioContext.createMediaStreamSource(micStream);
+                    microphone.connect(analyser);
+
+                    analyser.fftSize = 512; // Higher for better frequency resolution
+                    const bufferLength = analyser.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+
+                    isListening = true;
+
+                    // Start monitoring volume
+                    let isSpeaking = false;
+                    let silenceStart = null;
+                    let consecutiveSpeakingFrames = 0;
+                    let listeningStartTime = Date.now();
+                    let silenceTimer = null; // Timer for silence detection
+
+                    // Function to detect if speech has ended based on RMS calculation (from provided code)
+                    const detectSpeechEnd = (dataArray) => {
+                        // Calculate RMS (Root Mean Square) for volume - more accurate than simple average
+                        let sumSquares = 0;
+                        for (let i = 0; i < dataArray.length; i++) {
+                            const amplitude = (dataArray[i] - 128) / 128; // Normalize data from 0-255 to -1 to 1
+                            sumSquares += amplitude * amplitude;
+                        }
+                        const rms = Math.sqrt(sumSquares / dataArray.length);
+                        const volume = rms * 100; // Scale to a more readable number (0-100 range)
+
+                        // Log volume periodically
+                        if (Math.random() < 0.03) { // ~3% chance to log
+                            addLog(`RMS Volume: ${volume.toFixed(2)}`, "info");
+                        }
+
+                        // Add current volume to history
+                        volumeHistory.push(volume);
+
+                        // Keep history at max length
+                        if (volumeHistory.length > volumeHistoryMaxLength) {
+                            volumeHistory.shift();
+                        }
+
+                        // Only start detecting speech end after minimum speech time
+                        if (!speechStartTime || Date.now() - speechStartTime < speechEndDetectionMinTime) {
+                            return false;
+                        }
+
+                        // If we have enough history, analyze the pattern
+                        if (volumeHistory.length >= 10) {
+                            // Calculate average volume over the last 10 frames
+                            const recentAvg = volumeHistory.slice(-10).reduce((sum, vol) => sum + vol, 0) / 10;
+
+                            // Calculate standard deviation to detect consistent low volume
+                            const stdDev = Math.sqrt(
+                                volumeHistory.slice(-10).reduce((sum, vol) => sum + Math.pow(vol - recentAvg, 2), 0) / 10
+                            );
+
+                            // If average is below threshold and standard deviation is low (consistent silence)
+                            // Using a fixed threshold of 20 as suggested in the provided code
+                            if (recentAvg < 20 && stdDev < 5) {
+                                addLog(`Speech end detected: RMS avg=${recentAvg.toFixed(2)}, stdDev=${stdDev.toFixed(2)}`, "info");
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    };
+
+                    // Create a direct silence timer that will force stop recording after silence
+                    const createSilenceTimer = () => {
+                        // Clear any existing timer
+                        if (silenceTimer) {
+                            clearTimeout(silenceTimer);
+                        }
+
+                        // Create new timer
+                        silenceTimer = setTimeout(() => {
+                            if (isRecording && isSpeaking) {
+                                addLog(`SILENCE TIMER: ${silenceDetectionTime}ms silence detected - force stopping recording`, "info");
+                                forceSilenceDetection = true;
+
+                                // Force stop recording and listening
+                                if (isAISpeaking) {
+                                    stopRecording(true); // Save to buffer
+                                } else {
+                                    // Show processing indicator
+                                    showStatusMessage('Processing your response...', true);
+
+                                    // Update UI immediately
+                                    listeningIndicator.classList.add('hidden');
+                                    micBtn.classList.remove('listening');
+                                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+                                    // Stop recording and listening
+                                    stopRecording();
+
+                                    // Force stop listening with a small delay
+                                    setTimeout(() => {
+                                        stopContinuousListening();
+                                    }, 100);
+                                }
+
+                                isSpeaking = false;
+                                volumeHistory = []; // Reset volume history
+                            }
+                        }, silenceDetectionTime);
+                    };
+
+                    const checkVolume = () => {
+                        if (!isListening) return;
+
+                        // Get time domain data instead of frequency data for RMS calculation
+                        analyser.getByteTimeDomainData(dataArray);
+
+                        // Check if speech has ended using RMS-based detection
+                        if (isSpeaking && (detectSpeechEnd(dataArray) || forceSilenceDetection)) {
+                            addLog("Speech end detected using RMS - stopping recording", "info");
+
+                            // Reset force flag
+                            forceSilenceDetection = false;
+
+                            // If AI is speaking, we'll just buffer this recording
+                            if (isAISpeaking) {
+                                addLog('AI is still speaking, saving patient speech to buffer', "info");
+                                stopRecording(true); // Save to buffer
+                            } else {
+                                // Show processing indicator
+                                showStatusMessage('Processing your response...', true);
+
+                                // Update UI immediately
+                                listeningIndicator.classList.add('hidden');
+                                micBtn.classList.remove('listening');
+                                micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+                                // Stop recording and listening
+                                stopRecording();
+
+                                // Force stop listening with a small delay
+                                setTimeout(() => {
+                                    stopContinuousListening();
+                                }, 100);
+                            }
+
+                            isSpeaking = false;
+                            volumeHistory = []; // Reset volume history
+                            return; // Exit the checkVolume function
+                        }
+
+                        // Now get frequency data for speech detection
+                        analyser.getByteFrequencyData(dataArray);
+
+                        // Calculate volume using frequency data
+                        let sum = 0;
+                        for (let i = 0; i < bufferLength; i++) {
+                            sum += dataArray[i];
+                        }
+                        const average = sum / bufferLength / 255; // Normalize to 0-1
+
+                        // Detect if speaking - require multiple consecutive frames above threshold
+                        if (average > silenceDetectionThreshold) {
+                            consecutiveSpeakingFrames++;
+
+                            // User is speaking (after 3 consecutive frames above threshold)
+                            if (consecutiveSpeakingFrames >= 3 && !isSpeaking) {
+                                addLog(`Speech detected (volume: ${average.toFixed(3)})`, "info");
+                                isSpeaking = true;
+                                speechStartTime = Date.now(); // Record when speech started
+                                volumeHistory = []; // Reset volume history
+                                silenceTimer = 0; // Reset silence timer
+
+                                // If AI is speaking, we'll buffer the patient's speech
+                                if (isAISpeaking) {
+                                    addLog('AI is speaking, buffering patient speech', "info");
+                                    // We're still recording but will handle differently
+                                }
+
+                                startRecording(micStream, isAISpeaking);
+                            }
+
+                            // Reset silence timer
+                            if (silenceTimer) {
+                                clearTimeout(silenceTimer);
+                                silenceTimer = null;
+                            }
+                            silenceStart = null;
+                        } else {
+                            // Reset consecutive speaking frames counter
+                            consecutiveSpeakingFrames = 0;
+
+                            // Check for silence if user was speaking
+                            if (isSpeaking) {
+                                // Traditional silence detection as backup
+                                if (!silenceStart) {
+                                    silenceStart = Date.now();
+                                    // Create a silence timer that will force stop recording after silence
+                                    createSilenceTimer();
+                                    addLog("Started silence timer", "info");
+                                }
+                            } else {
+                                // If not speaking and we've been listening for a while without speech,
+                                // check if we should stop listening
+                                const listeningDuration = Date.now() - listeningStartTime;
+
+                                // If we've been listening for more than 10 seconds without speech, stop listening
+                                if (listeningDuration > 10000 && !isSpeaking && !isAISpeaking) {
+                                    addLog(`Been listening for ${Math.round(listeningDuration/1000)}s without speech - stopping listening`, "info");
+
+                                    // Show a visual indicator that we've stopped listening
+                                    listeningIndicator.classList.add('hidden');
+                                    micBtn.classList.remove('listening');
+                                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+                                    // Force stop listening
+                                    setTimeout(() => {
+                                        stopContinuousListening();
+                                        addLog("Forced stop listening due to timeout", "info");
+                                        showStatusMessage('Waiting for your response...', true);
+                                    }, 100);
+
+                                    return; // Exit the checkVolume function
+                                }
+
+                                // Absolute maximum listening time (30 seconds) regardless of speech
+                                if (listeningDuration > 30000) {
+                                    addLog(`Maximum listening time (30s) reached - stopping listening`, "info");
+
+                                    // If we were recording, stop and process it
+                                    if (isRecording) {
+                                        stopRecording();
+                                    }
+
+                                    // Show a visual indicator that we've stopped listening
+                                    listeningIndicator.classList.add('hidden');
+                                    micBtn.classList.remove('listening');
+                                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+                                    // Force stop listening
+                                    setTimeout(() => {
+                                        stopContinuousListening();
+                                        addLog("Forced stop listening due to maximum time limit", "info");
+                                        showStatusMessage('Processing your response...', true);
+                                    }, 100);
+
+                                    return; // Exit the checkVolume function
+                                }
+                            }
+                        }
+
+                        // Continue monitoring
+                        requestAnimationFrame(checkVolume);
+                    };
+
+                    // Start monitoring
+                    checkVolume();
+
+                } catch (error) {
+                    addLog(`Error starting continuous listening: ${error.message}`, "error");
+                    showStatusMessage(`Error accessing microphone: ${error.message}`);
+                    stopContinuousListening();
+                }
+            }
+
+            // Stop continuous listening
+            function stopContinuousListening() {
+                // Even if not listening, force cleanup to ensure consistent state
+
+                // Hide listening indicator
+                listeningIndicator.classList.add('hidden');
+
+                // Update mic button
+                micBtn.classList.remove('listening');
+                micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+                // Stop recording if active
+                if (isRecording) {
+                    stopRecording();
+                }
+
+                // Clean up audio context
+                if (audioContext) {
+                    try {
+                        audioContext.close().catch(console.error);
+                    } catch (error) {
+                        console.error("Error closing audio context:", error);
+                    }
+                    audioContext = null;
+                }
+
+                // Stop microphone stream
+                if (micStream) {
+                    try {
+                        micStream.getTracks().forEach(track => track.stop());
+                    } catch (error) {
+                        console.error("Error stopping microphone tracks:", error);
+                    }
+                    micStream = null;
+                }
+
+                // Always set listening to false regardless of previous state
+                const wasListening = isListening;
+                isListening = false;
+
+                if (wasListening) {
+                    addLog("Stopped listening", "info");
+                } else {
+                    addLog("Forced cleanup of listening resources", "info");
+                }
+            }
+
+            // Start recording
+            async function startRecording(stream = null, bufferMode = false) {
+                try {
+                    // If stream is not provided, get it
+                    if (!stream) {
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: true
+                            }
+                        });
+                    }
+
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'audio/webm;codecs=opus',
+                        audioBitsPerSecond: 128000
+                    });
+                    audioChunks = [];
+
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener('stop', () => {
+                        if (audioChunks.length === 0) return;
+
+                        const audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+
+                        // If in buffer mode (AI is speaking), save to buffer instead of sending
+                        if (bufferMode) {
+                            addLog(`Saving audio (${Math.round(audioBlob.size / 1024)} KB) to buffer`, "info");
+                            patientSpeechBuffer.push(audioBlob);
+                            return;
+                        }
+
+                        // Process any buffered speech first
+                        if (patientSpeechBuffer.length > 0) {
+                            addLog(`Processing ${patientSpeechBuffer.length} buffered speech segments`, "info");
+
+                            // Combine all blobs (current + buffered)
+                            const allBlobs = [...patientSpeechBuffer, audioBlob];
+                            const combinedBlob = new Blob(allBlobs, {type: 'audio/webm'});
+
+                            // Clear buffer
+                            patientSpeechBuffer = [];
+
+                            // Process combined audio
+                            processAudioBlob(combinedBlob);
+                        } else {
+                            // Process just this audio
+                            processAudioBlob(audioBlob);
+                        }
+                    });
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    addLog("Started recording audio", "info");
+
+                    // Update UI if not in buffer mode
+                    if (!bufferMode) {
+                        micBtn.classList.add('recording');
+                        // Only change the icon if we're not in continuous mode
+                        if (!isContinuousMode) {
+                            micBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                            showStatusMessage('Recording audio...', false);
+                        }
+                    }
+
+                } catch (error) {
+                    addLog(`Error accessing microphone: ${error.message}`, "error");
+                    showStatusMessage(`Error accessing microphone: ${error.message}`);
+
+                    // Reset UI
+                    stopContinuousListening();
+                }
+            }
+
+            // Process audio blob (convert to base64 and send to server)
+            function processAudioBlob(audioBlob) {
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                    const base64data = reader.result.split(',')[1];
+
+                    // Send audio to server
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        addLog(`Sending audio (${Math.round(audioBlob.size / 1024)} KB) to server`, "info");
+
+                        socket.send(JSON.stringify({
+                            audio: base64data,
+                            voice: chatVoiceSelect.value
+                        }));
+
+                        // Update UI for processing
+                        listeningIndicator.classList.add('hidden');
+                        micBtn.classList.remove('listening');
+                        micBtn.classList.add('thinking');
+                        micBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                        showStatusMessage('Processing audio...');
+                    } else {
+                        addLog("Cannot send audio - WebSocket not connected", "error");
+                    }
+                };
+
+                reader.readAsDataURL(audioBlob);
+            }
+
+            // Stop recording
+            function stopRecording(bufferMode = false) {
+                if (mediaRecorder && isRecording) {
+                    try {
+                        // If the mediaRecorder is in the "recording" state, stop it
+                        if (mediaRecorder.state === "recording") {
+                            mediaRecorder.stop();
+                            addLog("MediaRecorder stopped successfully", "info");
+                        } else {
+                            // If it's not in recording state, we need to handle the data manually
+                            addLog(`MediaRecorder was in ${mediaRecorder.state} state, handling data manually`, "info");
+
+                            // If we have audio chunks, process them
+                            if (audioChunks && audioChunks.length > 0) {
+                                const audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+
+                                // Process the audio blob
+                                if (bufferMode) {
+                                    patientSpeechBuffer.push(audioBlob);
+                                    addLog(`Manually saved audio (${Math.round(audioBlob.size / 1024)} KB) to buffer`, "info");
+                                } else {
+                                    processAudioBlob(audioBlob);
+                                }
+
+                                // Clear the chunks
+                                audioChunks = [];
+                            }
+                        }
+                    } catch (error) {
+                        addLog(`Error stopping recording: ${error.message}`, "error");
+
+                        // Try to process any audio chunks we might have
+                        if (audioChunks && audioChunks.length > 0) {
+                            const audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+
+                            // Process the audio blob
+                            if (bufferMode) {
+                                patientSpeechBuffer.push(audioBlob);
+                                addLog(`Manually saved audio (${Math.round(audioBlob.size / 1024)} KB) to buffer after error`, "info");
+                            } else {
+                                processAudioBlob(audioBlob);
+                            }
+
+                            // Clear the chunks
+                            audioChunks = [];
+                        }
+                    }
+                }
+
+                // Always reset the recording state
+                isRecording = false;
+                addLog("Stopped recording audio", "info");
+
+                // Update UI if not in buffer mode
+                if (!bufferMode && !isContinuousMode) {
+                    micBtn.classList.remove('recording');
+                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                }
+            }
+
+            // Process any buffered speech when AI stops speaking
+            function processBufferedSpeech() {
+                if (patientSpeechBuffer.length > 0) {
+                    addLog(`Processing ${patientSpeechBuffer.length} buffered speech segments after AI finished speaking`, "info");
+
+                    // Combine all blobs
+                    const combinedBlob = new Blob(patientSpeechBuffer, {type: 'audio/webm'});
+
+                    // Clear buffer
+                    patientSpeechBuffer = [];
+
+                    // Process combined audio
+                    processAudioBlob(combinedBlob);
+                }
+            }
+
+            // Auto-connect when page loads
+            setTimeout(() => {
+                addLog("Auto-connecting...", "info");
+                connectBtn.click();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

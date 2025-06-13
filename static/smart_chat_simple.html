@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Mental Health Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .chat-container {
+            max-width: 800px;
+            margin: 30px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .chat-header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: white;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            position: relative;
+        }
+        .user-message {
+            background-color: #e9f0ff;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        .ai-message {
+            background-color: #f0f0f0;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background-color: #f0f0f0;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+        .chat-input button {
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            background-color: #4a6fa5;
+            color: white;
+            cursor: pointer;
+        }
+        .chat-input button:hover {
+            background-color: #3a5a8f;
+        }
+        .keywords {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        .keyword-tag {
+            display: inline-block;
+            background-color: #e1e8f0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.75rem;
+        }
+        .login-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-connected {
+            background-color: #28a745;
+        }
+        .status-disconnected {
+            background-color: #dc3545;
+        }
+        .status-connecting {
+            background-color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div id="login-section" class="login-container">
+        <h2 class="text-center mb-4">Smart Mental Health Chat</h2>
+        <div class="mb-3">
+            <label for="patient-id" class="form-label">Enter Patient ID:</label>
+            <input type="text" class="form-control" id="patient-id" value="f31a95c6-76ef-4bb2-936c-b258285682d9" placeholder="e.g., f31a95c6-76ef-4bb2-936c-b258285682d9">
+            <small class="form-text text-muted">Using static JWT token for authentication</small>
+        </div>
+        <button id="login-button" class="btn btn-primary w-100">Start Chat</button>
+        <div id="login-error" class="mt-3 text-danger"></div>
+    </div>
+
+    <div id="chat-section" class="chat-container" style="display: none;">
+        <div class="chat-header">
+            <h2>Smart Mental Health Chat</h2>
+            <p id="patient-name">Patient ID: Not set</p>
+            <p id="connection-status">
+                <span class="status-indicator status-disconnected"></span>
+                Connection: Not connected
+            </p>
+        </div>
+        <div id="chat-messages" class="chat-messages"></div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Type your message here...">
+            <button id="send-button">Send</button>
+            <button id="mic-button">🎤</button>
+        </div>
+    </div>
+
+    <script>
+        // Static JWT token for authentication - must match the STATIC_JWT_TOKEN in .env file
+        const jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGF0aWMtdXNlciIsImVtYWlsIjoic3RhdGljQGV4YW1wbGUuY29tIiwicm9sZXMiOiJhZG1pbixkb2N0b3IscGF0aWVudCJ9.3oZ2Ubh5rLBdHvQHd5Qr9GJczA5MXcxaVx5H5xLwvZ4';
+
+        // DOM elements
+        const loginSection = document.getElementById('login-section');
+        const chatSection = document.getElementById('chat-section');
+        const patientIdInput = document.getElementById('patient-id');
+        const loginButton = document.getElementById('login-button');
+        const loginError = document.getElementById('login-error');
+        const patientName = document.getElementById('patient-name');
+        const connectionStatus = document.getElementById('connection-status');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const micButton = document.getElementById('mic-button');
+
+        // Variables
+        let ws = null;
+        let patientId = '';
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let isRecording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // Event listeners
+        loginButton.addEventListener('click', startChat);
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        micButton.addEventListener('click', toggleRecording);
+
+        // Functions
+        function updateConnectionStatus(status, isConnected = false) {
+            const statusIndicator = connectionStatus.querySelector('.status-indicator');
+            statusIndicator.className = 'status-indicator';
+
+            if (status === 'connected') {
+                statusIndicator.classList.add('status-connected');
+                connectionStatus.innerHTML = `<span class="status-indicator status-connected"></span> Connection: Connected`;
+                sendButton.disabled = false;
+                messageInput.disabled = false;
+                micButton.disabled = false;
+            } else if (status === 'connecting') {
+                statusIndicator.classList.add('status-connecting');
+                connectionStatus.innerHTML = `<span class="status-indicator status-connecting"></span> Connection: Connecting...`;
+                sendButton.disabled = true;
+                messageInput.disabled = true;
+                micButton.disabled = true;
+            } else if (isConnected) {
+                // For status updates while connected (recording, processing, etc.)
+                statusIndicator.classList.add('status-connected');
+                connectionStatus.innerHTML = `<span class="status-indicator status-connected"></span> Status: ${status}`;
+                sendButton.disabled = status.includes('Recording') || status.includes('Processing');
+                messageInput.disabled = status.includes('Recording') || status.includes('Processing');
+                // Don't disable mic button when recording/processing
+            } else {
+                statusIndicator.classList.add('status-disconnected');
+                connectionStatus.innerHTML = `<span class="status-indicator status-disconnected"></span> Connection: ${status}`;
+                sendButton.disabled = true;
+                messageInput.disabled = true;
+                micButton.disabled = true;
+            }
+        }
+
+        function startChat() {
+            patientId = patientIdInput.value.trim();
+
+            if (!patientId) {
+                loginError.textContent = 'Please enter a patient ID';
+                return;
+            }
+
+            // Update UI
+            loginSection.style.display = 'none';
+            chatSection.style.display = 'block';
+            patientName.textContent = `Patient ID: ${patientId}`;
+            updateConnectionStatus('connecting');
+
+            // Connect to WebSocket
+            connectWebSocket();
+
+            // Add welcome message
+            addMessage('Welcome to Smart Mental Health Chat. Connecting to server...', 'ai');
+        }
+
+        function connectWebSocket() {
+            // Close existing connection if any
+            if (ws) {
+                ws.close();
+            }
+
+            updateConnectionStatus('connecting');
+
+            try {
+                // Create WebSocket URL with token as query parameter
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/smart-chat/${patientId}?token=${jwtToken}`;
+
+                console.log(`Connecting to WebSocket: ${wsUrl}`);
+
+                // Create WebSocket
+                ws = new WebSocket(wsUrl);
+
+                // WebSocket event handlers
+                ws.onopen = () => {
+                    console.log('WebSocket connection opened');
+                    updateConnectionStatus('connected');
+                    reconnectAttempts = 0;
+                    addMessage('Connected to chat server! How can I help you today?', 'ai');
+                };
+
+                ws.onmessage = (event) => {
+                    console.log('Received message:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+
+                        if (data.transcription) {
+                            // This is a transcription response
+                            console.log('Received transcription:', data.transcription);
+
+                            // Find the placeholder message and replace it with the transcription
+                            const placeholderMessages = document.querySelectorAll('.user-message');
+                            const placeholderMessage = Array.from(placeholderMessages).find(
+                                msg => msg.textContent.includes('🎤 Processing audio...')
+                            );
+
+                            if (placeholderMessage) {
+                                // Replace the placeholder text with the transcription
+                                placeholderMessage.firstChild.textContent = data.transcription;
+                            } else {
+                                // If we can't find the placeholder, add a new message
+                                addMessage(data.transcription, 'user');
+                            }
+
+                            updateConnectionStatus('Audio processed', true);
+                        } else if (data.response) {
+                            // This is a normal response
+                            addMessage(data.response, 'ai', data.extracted_keywords);
+                        } else if (data.error) {
+                            // This is an error
+                            console.error('Server error:', data.error);
+                            addMessage(`Error: ${data.error}`, 'ai');
+                        }
+                    } catch (error) {
+                        console.error('Error parsing message:', error);
+                        addMessage('Error processing server response', 'ai');
+                    }
+                };
+
+                ws.onclose = (event) => {
+                    console.log(`WebSocket closed: Code ${event.code}, Reason: ${event.reason}`);
+                    updateConnectionStatus(`Disconnected (${event.code})`);
+
+                    // Attempt to reconnect if not a normal closure
+                    if (event.code !== 1000 && event.code !== 1001) {
+                        if (reconnectAttempts < maxReconnectAttempts) {
+                            reconnectAttempts++;
+                            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                            addMessage(`Connection lost. Reconnecting in ${delay/1000} seconds...`, 'ai');
+                            setTimeout(connectWebSocket, delay);
+                        } else {
+                            addMessage('Could not reconnect after several attempts. Please refresh the page.', 'ai');
+                        }
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus('Error');
+                };
+            } catch (error) {
+                console.error('Error creating WebSocket:', error);
+                updateConnectionStatus('Failed');
+                addMessage(`Error connecting to server: ${error.message}`, 'ai');
+            }
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addMessage('Not connected to server. Please wait or refresh the page.', 'ai');
+                return;
+            }
+
+            // Add message to chat
+            addMessage(message, 'user');
+
+            // Send message to server
+            try {
+                ws.send(JSON.stringify({ text: message }));
+                console.log('Message sent:', message);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage('Error sending message. Please try again.', 'ai');
+            }
+
+            // Clear input
+            messageInput.value = '';
+        }
+
+        function addMessage(message, sender, keywords = []) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender === 'user' ? 'user-message' : 'ai-message');
+
+            // Message text
+            const messageText = document.createElement('div');
+            messageText.textContent = message;
+            messageElement.appendChild(messageText);
+
+            // Keywords (for AI messages only)
+            if (sender === 'ai' && keywords && keywords.length > 0) {
+                const keywordsElement = document.createElement('div');
+                keywordsElement.classList.add('keywords');
+
+                keywords.forEach(keyword => {
+                    const keywordTag = document.createElement('span');
+                    keywordTag.classList.add('keyword-tag');
+                    keywordTag.textContent = keyword;
+                    keywordsElement.appendChild(keywordTag);
+                });
+
+                messageElement.appendChild(keywordsElement);
+            }
+
+            // Timestamp
+            const timeElement = document.createElement('div');
+            timeElement.classList.add('message-time');
+            const now = new Date();
+            timeElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageElement.appendChild(timeElement);
+
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            return messageElement;
+        }
+
+        // Voice recording functions
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = sendAudio;
+
+                mediaRecorder.start();
+                isRecording = true;
+                micButton.textContent = '⏹️';
+                updateConnectionStatus('Recording audio...', true);
+            } catch (error) {
+                console.error('Microphone error:', error);
+                updateConnectionStatus(`Microphone error: ${error.message}`, false);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                micButton.textContent = '🎤';
+                updateConnectionStatus('Processing audio...', true);
+            }
+        }
+
+        function sendAudio() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+            const reader = new FileReader();
+
+            // Add a placeholder message for the audio being processed
+            const placeholderMessage = addMessage('🎤 Processing audio...', 'user');
+
+            reader.onload = () => {
+                const base64Audio = reader.result.split(',')[1];
+
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ audio: base64Audio }));
+                    console.log('Audio sent to server');
+                } else {
+                    console.error('WebSocket not connected');
+                    updateConnectionStatus('WebSocket not connected', false);
+                }
+            };
+
+            reader.readAsDataURL(audioBlob);
+        }
+    </script>
+</body>
+</html>

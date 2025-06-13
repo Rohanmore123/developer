@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Audio Smart Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .chat-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .chat-messages {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 10px;
+            min-height: 100%;
+            width: 100%;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease-in-out;
+            line-height: 1.5;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #e3f2fd;
+            border-bottom-right-radius: 5px;
+            color: #333;
+        }
+        .ai-message {
+            align-self: flex-start;
+            background-color: #f0f2f5;
+            border-bottom-left-radius: 5px;
+            color: #333;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+        .chat-input input:focus {
+            border-color: #2c3e50;
+            box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+        }
+        .btn-send {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-send:hover {
+            background-color: #1a252f;
+        }
+        .btn-mic {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-mic:hover {
+            background-color: #1a252f;
+        }
+        .btn-mic.recording {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .voice-select {
+            width: auto;
+            padding: 5px;
+            border-radius: 20px;
+            border: 1px solid #ced4da;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin-right: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .voice-select:hover, .voice-select:focus {
+            border-color: #2c3e50;
+            box-shadow: 0 0 0 0.1rem rgba(44, 62, 80, 0.25);
+        }
+        .patient-info {
+            background-color: #e8f4f8;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            border-left: 4px solid #2c3e50;
+        }
+        .patient-info h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            margin: 0 1px;
+            background-color: #666;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: 0.1s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typing {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        .status-bar {
+            padding: 5px 15px;
+            background-color: #e9ecef;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .status-bar.fade-out {
+            opacity: 0;
+        }
+        .transcription {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .audio-controls button {
+            background: none;
+            border: none;
+            color: #2c3e50;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            margin-right: 10px;
+            transition: all 0.2s ease;
+        }
+        .audio-controls button:hover {
+            color: #1a252f;
+            transform: scale(1.1);
+        }
+        .audio-controls .play-btn {
+            color: #2c3e50;
+        }
+        .audio-controls .pause-btn {
+            color: #e74c3c;
+        }
+        .audio-controls .play-btn:hover {
+            color: #3498db;
+        }
+        .audio-controls .pause-btn:hover {
+            color: #c0392b;
+        }
+        .audio-btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #f8f9fa;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .audio-btn:active {
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transform: translateY(1px);
+        }
+        .hidden {
+            display: none;
+        }
+        #connectionStatus {
+            font-weight: bold;
+        }
+        .connected {
+            color: green;
+        }
+        .disconnected {
+            color: red;
+        }
+        .connecting {
+            color: orange;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid d-flex flex-column h-100 py-3">
+        <div class="chat-container flex-grow-1">
+            <div class="chat-header">
+                <h2><i class="fas fa-user-md me-2"></i> Doctor Audio Smart Chat</h2>
+                <div class="d-flex align-items-center">
+                    <button id="stopAllAudioBtn" class="btn btn-sm btn-outline-light me-3" title="Stop all audio playback" style="display: none;">
+                        <i class="fas fa-volume-mute me-1"></i> Stop Audio
+                    </button>
+                    <span id="connectionStatus" class="disconnected">Disconnected</span>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div id="statusMessage">Please enter your doctor ID and token to connect</div>
+            </div>
+            <div id="loginForm" class="p-4">
+                <div class="mb-3">
+                    <label for="doctorId" class="form-label">Doctor ID</label>
+                    <input type="text" class="form-control" id="doctorId" placeholder="Enter your doctor ID">
+                </div>
+                <div class="mb-3">
+                    <label for="token" class="form-label">Authentication Token</label>
+                    <input type="text" class="form-control" id="token" placeholder="Enter your JWT token">
+                </div>
+                <div class="mb-3">
+                    <label for="voiceSelect" class="form-label">AI Voice</label>
+                    <select class="form-select" id="voiceSelect">
+                        <option value="alloy" selected>Alloy (Neutral)</option>
+                        <option value="echo">Echo (Male)</option>
+                        <option value="fable">Fable (Female)</option>
+                        <option value="onyx">Onyx (Male, Deep)</option>
+                        <option value="nova">Nova (Female, Soft)</option>
+                        <option value="shimmer">Shimmer (Female, Clear)</option>
+                    </select>
+                    <div class="form-text">
+                        Select the voice for AI responses. Each voice has different characteristics:
+                        <ul class="small mt-1">
+                            <li><strong>Alloy</strong>: Neutral, versatile voice</li>
+                            <li><strong>Echo</strong>: Male voice with a natural tone</li>
+                            <li><strong>Fable</strong>: Female voice with a warm quality</li>
+                            <li><strong>Onyx</strong>: Male voice with a deep, authoritative tone</li>
+                            <li><strong>Nova</strong>: Female voice with a soft, gentle quality</li>
+                            <li><strong>Shimmer</strong>: Female voice with a clear, bright tone</li>
+                        </ul>
+                    </div>
+                </div>
+                <button id="connectBtn" class="btn btn-primary">Connect</button>
+            </div>
+            <div id="chatInterface" class="d-none flex-grow-1 d-flex flex-column">
+                <div class="flex-grow-1 overflow-auto" id="chatContainer" style="height: calc(100vh - 220px); max-height: calc(100vh - 220px); overflow-y: auto;">
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div id="typingIndicator" class="ai-message typing-indicator hidden">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="d-flex flex-column">
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Type your message here..." autocomplete="off">
+                        <select id="chatVoiceSelect" class="voice-select" title="Select AI voice">
+                            <option value="alloy">Alloy</option>
+                            <option value="echo">Echo</option>
+                            <option value="fable">Fable</option>
+                            <option value="onyx">Onyx</option>
+                            <option value="nova">Nova</option>
+                            <option value="shimmer">Shimmer</option>
+                        </select>
+                        <button id="micBtn" class="btn-mic"><i class="fas fa-microphone"></i></button>
+                        <button id="sendBtn" class="btn-send"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const connectBtn = document.getElementById('connectBtn');
+            const doctorIdInput = document.getElementById('doctorId');
+            const tokenInput = document.getElementById('token');
+            const voiceSelect = document.getElementById('voiceSelect');
+            const chatVoiceSelect = document.getElementById('chatVoiceSelect');
+            const loginForm = document.getElementById('loginForm');
+            const chatInterface = document.getElementById('chatInterface');
+            const chatMessages = document.getElementById('chatMessages');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const micBtn = document.getElementById('micBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const statusMessage = document.getElementById('statusMessage');
+            const statusBar = document.querySelector('.status-bar');
+            const typingIndicator = document.getElementById('typingIndicator');
+            const stopAllAudioBtn = document.getElementById('stopAllAudioBtn');
+
+            // Function to auto-hide status message after a delay
+            function showStatusMessage(message, autoHide = true) {
+                // Clear any existing timeout
+                if (window.statusTimeout) {
+                    clearTimeout(window.statusTimeout);
+                }
+
+                // Show the message
+                statusMessage.textContent = message;
+                statusBar.classList.remove('fade-out');
+
+                // Auto-hide after 3 seconds if requested
+                if (autoHide) {
+                    window.statusTimeout = setTimeout(() => {
+                        statusBar.classList.add('fade-out');
+                    }, 3000);
+                }
+            }
+
+            // Function to scroll chat to bottom
+            function scrollToBottom() {
+                const chatContainer = document.getElementById('chatContainer');
+                if (chatContainer) {
+                    // Use setTimeout to ensure this happens after DOM updates
+                    setTimeout(() => {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }, 100);
+                }
+            }
+
+            let socket = null;
+            let mediaRecorder = null;
+            let audioChunks = [];
+            let isRecording = false;
+            let doctorId = '';
+            let token = '';
+            let currentPatientId = null;
+
+            // Connect to WebSocket
+            connectBtn.addEventListener('click', function() {
+                doctorId = doctorIdInput.value.trim();
+                token = tokenInput.value.trim();
+
+                if (!doctorId) {
+                    alert('Please enter a doctor ID');
+                    return;
+                }
+
+                if (!token) {
+                    alert('Please enter an authentication token');
+                    return;
+                }
+
+                connectToWebSocket();
+            });
+
+            function connectToWebSocket() {
+                connectionStatus.textContent = 'Connecting...';
+                connectionStatus.className = 'connecting';
+                showStatusMessage('Connecting to server...', false);
+
+                // Close existing socket if any
+                if (socket) {
+                    socket.close();
+                }
+
+                // Create new WebSocket connection
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/audio-smart-chat-doc/${doctorId}?token=${token}`;
+                socket = new WebSocket(wsUrl);
+
+                socket.onopen = function() {
+                    console.log('WebSocket connection established');
+                    connectionStatus.textContent = 'Connected';
+                    connectionStatus.className = 'connected';
+                    showStatusMessage('Connected to AI assistant');
+
+                    // Show chat interface, hide login form
+                    loginForm.classList.add('d-none');
+                    chatInterface.classList.remove('d-none');
+                    chatInterface.classList.add('d-flex');
+
+                    // Sync the voice selection from login form to chat interface
+                    chatVoiceSelect.value = voiceSelect.value;
+
+                    // Make sure chat is scrollable from the start
+                    scrollToBottom();
+                };
+
+                socket.onmessage = function(event) {
+                    console.log('Message received:', event.data);
+                    let data;
+
+                    try {
+                        // Parse the response data
+                        data = JSON.parse(event.data);
+                        console.log('Parsed data:', data);
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        showStatusMessage(`Error parsing response: ${error.message}`);
+                        return;
+                    }
+
+                    // Hide typing indicator
+                    typingIndicator.classList.add('hidden');
+
+                    // Handle transcription
+                    if (data.transcription) {
+                        console.log('Received transcription:', data.transcription);
+
+                        // Update the input field with the transcription
+                        messageInput.value = data.transcription;
+
+                        // Update the last user message with the transcription
+                        const userMessages = document.querySelectorAll('.user-message');
+                        if (userMessages.length > 0) {
+                            const lastUserMessage = userMessages[userMessages.length - 1];
+                            const messageText = lastUserMessage.querySelector('div:first-child');
+                            if (messageText && messageText.textContent.includes('🎤')) {
+                                // Replace the recording indicator with the actual transcription
+                                messageText.textContent = data.transcription;
+
+                                // Clear the input field since we've already displayed the message
+                                messageInput.value = '';
+                            }
+                        } else {
+                            // If no user message exists yet, add one
+                            addMessage(data.transcription, 'user');
+                        }
+
+                        // Ensure we scroll to the bottom after updating the transcription
+                        scrollToBottom();
+                        return;
+                    }
+
+                    // Handle error
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                        showStatusMessage(`Error: ${data.error}`);
+                        return;
+                    }
+
+                    // Handle AI response
+                    if (data.response) {
+                        const message = data.response;
+                        const audio = data.audio;
+                        const patientId = data.patient_id;
+
+                        // Update current patient ID if provided
+                        if (patientId) {
+                            currentPatientId = patientId;
+                            showStatusMessage(`Patient ID detected: ${patientId}`);
+                        }
+
+                        // Clear any existing response timeout
+                        if (window.responseTimeout) {
+                            clearTimeout(window.responseTimeout);
+                        }
+
+                        // Use response_id for deduplication if available
+                        const responseId = data.response_id || '';
+
+                        if (!window.lastResponseId || window.lastResponseId !== responseId) {
+                            // This is a new message, add it to the chat
+                            addMessage(message, 'ai', audio);
+                            window.lastResponseId = responseId;
+
+                            // Ensure we scroll to the bottom after adding the message
+                            scrollToBottom();
+                        } else {
+                            console.log('Duplicate message detected (same response_id), ignoring');
+                        }
+                    }
+                };
+
+                socket.onclose = function() {
+                    console.log('WebSocket connection closed');
+                    connectionStatus.textContent = 'Disconnected';
+                    connectionStatus.className = 'disconnected';
+                    showStatusMessage('Connection closed. Please reconnect.', false);
+                };
+
+                socket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    connectionStatus.textContent = 'Error';
+                    connectionStatus.className = 'disconnected';
+                    showStatusMessage('Connection error. Please try again.', false);
+                };
+            }
+
+            // Send message
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    alert('Not connected to server. Please connect first.');
+                    return;
+                }
+
+                // Add user message to chat
+                addMessage(message, 'user');
+
+                // Show typing indicator
+                typingIndicator.classList.remove('hidden');
+
+                // Get the current selected voice
+                const selectedVoice = chatVoiceSelect.value;
+
+                // Send message to server with voice preference
+                socket.send(JSON.stringify({
+                    text: message,
+                    voice: selectedVoice
+                }));
+
+                // Clear input
+                messageInput.value = '';
+
+                // Ensure we scroll to the bottom
+                scrollToBottom();
+            }
+
+            // Add message to chat
+            function addMessage(message, sender, audioData = null) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender === 'user' ? 'user-message' : 'ai-message');
+
+                // Message text
+                const messageText = document.createElement('div');
+                messageText.textContent = message;
+                messageElement.appendChild(messageText);
+
+                // Add audio player if audio data is available
+                if (audioData && sender === 'ai') {
+                    const audioControls = document.createElement('div');
+                    audioControls.classList.add('audio-controls');
+
+                    // Create play button
+                    const playButton = document.createElement('button');
+                    playButton.innerHTML = '<i class="fas fa-play"></i>';
+                    playButton.title = 'Play audio';
+                    playButton.classList.add('audio-btn', 'play-btn');
+
+                    // Create pause button
+                    const pauseButton = document.createElement('button');
+                    pauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+                    pauseButton.title = 'Pause audio';
+                    pauseButton.classList.add('audio-btn', 'pause-btn');
+                    pauseButton.style.display = 'none'; // Hide initially
+
+                    // Create audio element
+                    const audio = new Audio(`data:audio/mp3;base64,${audioData}`);
+
+                    // Add data attribute to track playing state
+                    messageElement.dataset.isPlaying = 'false';
+
+                    // Function to toggle play/pause state
+                    const togglePlayPause = () => {
+                        if (messageElement.dataset.isPlaying === 'true') {
+                            audio.pause();
+                            messageElement.dataset.isPlaying = 'false';
+                            playButton.style.display = 'inline-block';
+                            pauseButton.style.display = 'none';
+
+                            // Check if any other audio is still playing
+                            updateStopAllButton();
+                        } else {
+                            // Pause all other playing audios first
+                            document.querySelectorAll('.message[data-is-playing="true"]').forEach(el => {
+                                if (el !== messageElement) {
+                                    // Trigger pause on other playing messages
+                                    const otherPauseBtn = el.querySelector('.pause-btn');
+                                    if (otherPauseBtn) otherPauseBtn.click();
+                                }
+                            });
+
+                            audio.play();
+                            messageElement.dataset.isPlaying = 'true';
+                            playButton.style.display = 'none';
+                            pauseButton.style.display = 'inline-block';
+
+                            // Show the stop all button when audio starts playing
+                            stopAllAudioBtn.style.display = 'inline-block';
+                        }
+                    };
+
+                    // Play audio when play button is clicked
+                    playButton.addEventListener('click', togglePlayPause);
+
+                    // Pause audio when pause button is clicked
+                    pauseButton.addEventListener('click', togglePlayPause);
+
+                    // When audio ends, reset the UI
+                    audio.addEventListener('ended', function() {
+                        messageElement.dataset.isPlaying = 'false';
+                        playButton.style.display = 'inline-block';
+                        pauseButton.style.display = 'none';
+
+                        // Check if any other audio is still playing
+                        updateStopAllButton();
+                    });
+
+                    // Auto-play the audio
+                    setTimeout(() => {
+                        togglePlayPause();
+                    }, 500);
+
+                    audioControls.appendChild(playButton);
+                    audioControls.appendChild(pauseButton);
+                    messageElement.appendChild(audioControls);
+                }
+
+                // Add timestamp
+                const timeElement = document.createElement('div');
+                timeElement.classList.add('message-time');
+                const now = new Date();
+                timeElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageElement.appendChild(timeElement);
+
+                // Add to chat
+                chatMessages.appendChild(messageElement);
+
+                // Scroll to bottom
+                scrollToBottom();
+            }
+
+            // Send button click
+            sendBtn.addEventListener('click', sendMessage);
+
+            // Enter key to send
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Audio recording
+            micBtn.addEventListener('click', toggleRecording);
+
+            // Voice selection change
+            chatVoiceSelect.addEventListener('change', function() {
+                const selectedVoiceName = chatVoiceSelect.options[chatVoiceSelect.selectedIndex].text;
+                showStatusMessage(`Voice changed to ${selectedVoiceName}`);
+
+                // Update the login form voice selection to keep them in sync
+                if (voiceSelect) {
+                    voiceSelect.value = chatVoiceSelect.value;
+                }
+            });
+
+            // Stop all audio playback
+            stopAllAudioBtn.addEventListener('click', function() {
+                // Find all messages that are currently playing audio
+                const playingMessages = document.querySelectorAll('.message[data-is-playing="true"]');
+
+                if (playingMessages.length > 0) {
+                    // Click the pause button on each playing message
+                    playingMessages.forEach(message => {
+                        const pauseBtn = message.querySelector('.pause-btn');
+                        if (pauseBtn) pauseBtn.click();
+                    });
+
+                    showStatusMessage('All audio playback stopped');
+
+                    // Hide the stop all button
+                    stopAllAudioBtn.style.display = 'none';
+                }
+            });
+
+            // Function to check if any audio is playing and show/hide the stop all button
+            function updateStopAllButton() {
+                const playingMessages = document.querySelectorAll('.message[data-is-playing="true"]');
+                stopAllAudioBtn.style.display = playingMessages.length > 0 ? 'inline-block' : 'none';
+            }
+
+            // Set up a timer to periodically check if any audio is playing
+            setInterval(updateStopAllButton, 500);
+
+            async function toggleRecording() {
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    alert('Not connected to server. Please connect first.');
+                    return;
+                }
+
+                if (isRecording) {
+                    // Stop recording
+                    stopRecording();
+                } else {
+                    // Start recording
+                    startRecording();
+                }
+            }
+
+            async function startRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener('stop', () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                        sendAudioToServer(audioBlob);
+
+                        // Stop all tracks to release microphone
+                        stream.getTracks().forEach(track => track.stop());
+                    });
+
+                    // Start recording
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    micBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                    showStatusMessage('Recording audio...');
+
+                    // Auto-stop recording after 10 seconds if user doesn't stop manually
+                    setTimeout(() => {
+                        if (isRecording) {
+                            console.log('Auto-stopping recording after 10 seconds');
+                            stopRecording();
+                        }
+                    }, 10000);
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    alert('Error accessing microphone. Please check your browser permissions.');
+                }
+            }
+
+            function stopRecording() {
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    micBtn.classList.remove('recording');
+                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                    showStatusMessage('Processing audio...');
+
+                    // Show typing indicator
+                    typingIndicator.classList.remove('hidden');
+
+                    // Note: The audio will be automatically sent when the 'stop' event fires
+                    // and the sendAudioToServer function is called
+                }
+            }
+
+            function sendAudioToServer(audioBlob) {
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = function() {
+                    const base64data = reader.result.split(',')[1];
+
+                    // Get the current selected voice
+                    const selectedVoice = chatVoiceSelect.value;
+
+                    // Add user message with recording indicator (will be updated with transcription)
+                    const tempMessage = '🎤 Recording...';
+                    addMessage(tempMessage, 'user');
+
+                    // Send to server with voice preference
+                    socket.send(JSON.stringify({
+                        audio: base64data,
+                        voice: selectedVoice
+                    }));
+                };
+            }
+        });
+    </script>
+</body>
+</html>

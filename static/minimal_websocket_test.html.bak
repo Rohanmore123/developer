@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal WebSocket Test</title>
+</head>
+<body>
+    <h1>Minimal WebSocket Test</h1>
+    <div id="status">Status: Not connected</div>
+    <button id="connect-btn">Connect</button>
+    <button id="send-btn" disabled>Send Test Message</button>
+    <div id="log" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;"></div>
+
+    <script>
+        // Static JWT token
+        const jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGF0aWMtdXNlciIsImVtYWlsIjoic3RhdGljQGV4YW1wbGUuY29tIiwicm9sZXMiOiJhZG1pbixkb2N0b3IscGF0aWVudCJ9.3oZ2Ubh5rLBdHvQHd5Qr9GJczA5MXcxaVx5H5xLwvZ4';
+        
+        // Patient ID
+        const patientId = 'a07b24f2-5eda-4dd7-b5c4-ddef1226b8a2';
+        
+        // DOM elements
+        const statusElement = document.getElementById('status');
+        const connectButton = document.getElementById('connect-btn');
+        const sendButton = document.getElementById('send-btn');
+        const logElement = document.getElementById('log');
+        
+        // WebSocket object
+        let ws = null;
+        
+        // Log function
+        function log(message) {
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        // Connect to WebSocket
+        connectButton.addEventListener('click', () => {
+            // Close existing connection if any
+            if (ws) {
+                ws.close();
+            }
+            
+            // Create WebSocket URL
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/smart-chat/${patientId}?token=${jwtToken}`;
+            
+            log(`Connecting to WebSocket: ${wsUrl}`);
+            statusElement.textContent = 'Status: Connecting...';
+            
+            try {
+                // Create WebSocket
+                ws = new WebSocket(wsUrl);
+                
+                // WebSocket event handlers
+                ws.onopen = () => {
+                    log('WebSocket connection opened');
+                    statusElement.textContent = 'Status: Connected';
+                    sendButton.disabled = false;
+                };
+                
+                ws.onmessage = (event) => {
+                    log(`Received message: ${event.data}`);
+                };
+                
+                ws.onclose = (event) => {
+                    log(`WebSocket closed: Code ${event.code}, Reason: ${event.reason}`);
+                    statusElement.textContent = `Status: Disconnected (${event.code})`;
+                    sendButton.disabled = true;
+                };
+                
+                ws.onerror = (error) => {
+                    log(`WebSocket error: ${error}`);
+                    statusElement.textContent = 'Status: Error';
+                    sendButton.disabled = true;
+                };
+            } catch (error) {
+                log(`Error creating WebSocket: ${error}`);
+                statusElement.textContent = 'Status: Failed';
+                sendButton.disabled = true;
+            }
+        });
+        
+        // Send test message
+        sendButton.addEventListener('click', () => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('WebSocket not connected');
+                return;
+            }
+            
+            const message = JSON.stringify({ text: 'Hello, how are you today?' });
+            log(`Sending message: ${message}`);
+            ws.send(message);
+        });
+    </script>
+</body>
+</html>

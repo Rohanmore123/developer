@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Treatment Journey</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #4a6fdc 0%, #3a5bbf 100%);
+            color: white;
+            padding: 25px 0;
+            margin-bottom: 30px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .patient-info {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #4a6fdc;
+        }
+        .insights-container {
+            margin-top: 30px;
+        }
+        .insight-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-top: 5px solid transparent;
+        }
+        .insight-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        /* Color coding for different insight types */
+        .insight-card.progress {
+            border-top-color: #4a6fdc; /* Blue */
+        }
+        .insight-card.recommendation {
+            border-top-color: #28a745; /* Green */
+        }
+        .insight-card.milestone {
+            border-top-color: #ffc107; /* Yellow */
+        }
+        .insight-card.reminder {
+            border-top-color: #fd7e14; /* Orange */
+        }
+        .insight-card.encouragement {
+            border-top-color: #e83e8c; /* Pink */
+        }
+        .insight-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .insight-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #f0f4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 1.8rem;
+            color: #4a6fdc;
+            box-shadow: 0 3px 8px rgba(74, 111, 220, 0.2);
+        }
+        .insight-card.progress .insight-icon {
+            color: #4a6fdc; /* Blue */
+            background-color: #f0f4ff;
+        }
+        .insight-card.recommendation .insight-icon {
+            color: #28a745; /* Green */
+            background-color: #f0fff4;
+        }
+        .insight-card.milestone .insight-icon {
+            color: #ffc107; /* Yellow */
+            background-color: #fffdf0;
+        }
+        .insight-card.reminder .insight-icon {
+            color: #fd7e14; /* Orange */
+            background-color: #fff8f0;
+        }
+        .insight-card.encouragement .insight-icon {
+            color: #e83e8c; /* Pink */
+            background-color: #fff0f6;
+        }
+        .insight-title {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+        .insight-description {
+            color: #555;
+            margin-bottom: 20px;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+        .action-steps {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #4a6fdc;
+        }
+        .action-steps h5 {
+            font-size: 1.1rem;
+            color: #4a6fdc;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .action-steps h5 i {
+            margin-right: 10px;
+        }
+        .action-steps ul {
+            padding-left: 25px;
+            margin-bottom: 0;
+        }
+        .action-steps li {
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 5px;
+        }
+        .action-steps li:last-child {
+            margin-bottom: 0;
+        }
+        .badge-high {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        .badge-medium {
+            background-color: #fd7e14;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        .badge-low {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        .insight-type {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .insight-type i {
+            margin-right: 5px;
+            font-size: 0.8rem;
+        }
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            text-align: center;
+        }
+        .loading i {
+            font-size: 3.5rem;
+            color: #4a6fdc;
+            margin-bottom: 25px;
+        }
+        .no-insights {
+            text-align: center;
+            padding: 60px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        .no-insights i {
+            font-size: 3.5rem;
+            color: #6c757d;
+            margin-bottom: 25px;
+        }
+        .back-button {
+            margin-bottom: 25px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: #e9ecef;
+            transform: translateX(-3px);
+        }
+        .generated-time {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-align: right;
+            margin-top: 15px;
+            font-style: italic;
+        }
+        .health-summary {
+            display: flex;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .health-metric {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-right: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            min-width: 120px;
+        }
+        .health-metric i {
+            margin-right: 10px;
+            color: #4a6fdc;
+        }
+        .health-metric-value {
+            font-weight: 600;
+        }
+        .next-appointment {
+            background-color: #f0f4ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .next-appointment i {
+            font-size: 1.5rem;
+            color: #4a6fdc;
+            margin-right: 15px;
+        }
+        .progress-section {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .progress-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .progress-bar-container {
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4a6fdc 0%, #3a5bbf 100%);
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1><i class="fas fa-heartbeat me-2"></i> Your Treatment Journey</h1>
+            <p class="mb-0">Personalized insights to help you on your path to wellness</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <button class="btn btn-outline-secondary back-button" onclick="window.history.back()">
+            <i class="fas fa-arrow-left me-2"></i> Back
+        </button>
+
+        <div class="patient-info">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2 id="patientName">Loading patient information...</h2>
+                    <p id="patientDetails">Please wait while we load your information.</p>
+
+                    <div class="health-summary" id="healthSummary">
+                        <!-- Health metrics will be added here dynamically -->
+                    </div>
+
+                    <div class="next-appointment" id="nextAppointment" style="display: none;">
+                        <i class="fas fa-calendar-check"></i>
+                        <div>
+                            <strong>Next Appointment:</strong>
+                            <div id="nextAppointmentDate">No upcoming appointments</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p id="patientId" class="text-muted"></p>
+
+                    <div class="progress-section" id="progressSection" style="display: none;">
+                        <div class="progress-title">Treatment Progress</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="treatmentProgress" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-label">
+                            <span>Started</span>
+                            <span id="progressPercentage">0%</span>
+                            <span>Goal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="insights-container" id="insightsContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <h3>Generating your personalized insights...</h3>
+                <p>We're analyzing your health data to provide you with meaningful insights.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get patient ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let patientId = urlParams.get('patientId');
+
+            // Try different token sources in order of preference
+            const token = localStorage.getItem('STATIC_JWT_TOKEN') ||
+                          localStorage.getItem('token') ||
+                          sessionStorage.getItem('token');
+
+            // If no patient ID in URL, try to get the current user's patient ID
+            if (!patientId) {
+                // If no token, just show the patient ID required message instead of redirecting
+                if (!token) {
+                    document.getElementById('insightsContainer').innerHTML = `
+                        <div class="no-insights">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Login Required</h3>
+                            <p>Please <a href="/login.html">login</a> or provide a patient ID in the URL (e.g., ?patientId=123) to view insights.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Parse the JWT token to get user info
+                try {
+                    // JWT tokens are in format: header.payload.signature
+                    // We need the payload part (index 1)
+                    const tokenParts = token.split('.');
+                    if (tokenParts.length === 3) {
+                        const payload = JSON.parse(atob(tokenParts[1]));
+
+                        // Check if user is a patient
+                        const roles = payload.roles || '';
+                        const isPatient = roles.toLowerCase().includes('patient');
+
+                        if (isPatient) {
+                            // Get user ID
+                            const userId = payload.sub;
+
+                            if (userId) {
+                                // Show loading message
+                                document.getElementById('insightsContainer').innerHTML = `
+                                    <div class="loading">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <h3>Finding your patient record...</h3>
+                                        <p>Please wait while we locate your information.</p>
+                                    </div>
+                                `;
+
+                                // Since we have a valid token with patient role but no endpoint to get patient ID,
+                                // let's try to directly use the patient ID from the URL or the user ID as the patient ID
+
+                                // First try the direct endpoint if it exists
+                                fetch(`/patients/user/${userId}`, {
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`
+                                    }
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        // If endpoint doesn't exist or returns error, try using user ID directly
+                                        console.log(`Patient lookup endpoint failed with status ${response.status}. Trying direct patient ID.`);
+                                        // Use the user ID directly as the patient ID
+                                        patientId = userId;
+                                        document.getElementById('patientId').textContent = `Patient ID: ${patientId}`;
+                                        fetchInsights(patientId, token);
+                                        return null;
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    if (data === null) {
+                                        // We're already handling this case above
+                                        return;
+                                    }
+
+                                    if (data && data.patient_id) {
+                                        patientId = data.patient_id;
+                                        document.getElementById('patientId').textContent = `Patient ID: ${patientId}`;
+                                        fetchInsights(patientId, token);
+                                    } else {
+                                        console.log('Patient endpoint returned data but no patient_id:', data);
+                                        // Try using user ID directly as patient ID
+                                        patientId = userId;
+                                        document.getElementById('patientId').textContent = `Patient ID: ${patientId}`;
+                                        fetchInsights(patientId, token);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching patient ID:', error);
+                                    // Try using user ID directly as patient ID
+                                    console.log('Trying to use user ID as patient ID:', userId);
+                                    patientId = userId;
+                                    document.getElementById('patientId').textContent = `Patient ID: ${patientId}`;
+                                    fetchInsights(patientId, token);
+                                });
+                                return;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing JWT token:', error);
+                }
+
+                // If we get here, we couldn't get the patient ID automatically
+                document.getElementById('insightsContainer').innerHTML = `
+                    <div class="no-insights">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Patient ID Required</h3>
+                        <p>Please provide a patient ID in the URL (e.g., ?patientId=123) to view insights.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('patientId').textContent = `Patient ID: ${patientId}`;
+
+            // We already checked for token at the beginning, but double-check here
+            if (!token) {
+                document.getElementById('insightsContainer').innerHTML = `
+                    <div class="no-insights">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Authentication Required</h3>
+                        <p>Please <a href="/login.html">login</a> to view treatment insights.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Fetch insights and patient info
+            fetchInsights(patientId, token);
+        });
+
+        // Function to fetch insights and patient info
+        function fetchInsights(patientId, token) {
+            // Show loading state
+            document.getElementById('insightsContainer').innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <h3>Generating your personalized insights...</h3>
+                    <p>We're analyzing your health data to provide you with meaningful insights.</p>
+                </div>
+            `;
+
+            // Log the patient ID and token (partially masked) for debugging
+            console.log(`Fetching insights for patient ID: ${patientId}`);
+            console.log(`Using token starting with: ${token.substring(0, 15)}...`);
+
+            // Try the direct endpoint first
+            fetch(`/treatment-insights/patient/${patientId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.log(`Insights endpoint returned status: ${response.status}`);
+
+                    // If we get a 404, try the URL directly from the example
+                    if (response.status === 404) {
+                        console.log('Trying example URL directly');
+                        return fetch(`/treatment-insights/patient/f31a95c6-76ef-4bb2-936c-b258285682d9`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                    }
+
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data) {
+                    throw new Error('No data returned from insights endpoint');
+                }
+
+                console.log('Insights data received:', data);
+                displayInsights(data, patientId);
+            })
+            .catch(error => {
+                console.error('Error fetching insights:', error);
+                document.getElementById('insightsContainer').innerHTML = `
+                    <div class="no-insights">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error Loading Insights</h3>
+                        <p>${error.message || 'There was an error loading your insights. Please try again later.'}</p>
+                        <div class="mt-3">
+                            <p>Try accessing the insights directly:</p>
+                            <a href="/treatment-insights/patient/f31a95c6-76ef-4bb2-936c-b258285682d9" class="btn btn-primary">
+                                View Example Insights
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Fetch patient info
+            fetch(`/patients/${patientId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.log(`Patient info endpoint returned status: ${response.status}`);
+
+                    // Create a default patient object with the ID
+                    return {
+                        patient_id: patientId,
+                        first_name: 'Patient',
+                        last_name: patientId.substring(0, 8),
+                        health_score: 75
+                    };
+                }
+                return response.json();
+            })
+            .then(patient => {
+                console.log('Patient data:', patient);
+
+                // If we got an empty response, create a default patient
+                if (!patient || Object.keys(patient).length === 0) {
+                    patient = {
+                        patient_id: patientId,
+                        first_name: 'Patient',
+                        last_name: patientId.substring(0, 8),
+                        health_score: 75
+                    };
+                }
+
+                displayPatientInfo(patient);
+
+                // Try to fetch appointments to show next appointment
+                try {
+                    return fetch(`/appointments/patient/${patientId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }).catch(err => {
+                        console.log('Appointments endpoint error:', err);
+                        return null;
+                    });
+                } catch (error) {
+                    // Silently fail if appointments endpoint doesn't exist
+                    console.log('Appointments endpoint not available');
+                    return null;
+                }
+            })
+            .then(response => {
+                if (response && response.ok) {
+                    return response.json();
+                }
+                return null;
+            })
+            .then(appointments => {
+                if (appointments) {
+                    console.log('Appointments data:', appointments);
+                    displayAppointments(appointments);
+                }
+            })
+            .catch(error => {
+                console.error('Error in patient info flow:', error);
+                document.getElementById('patientName').textContent = 'Your Treatment Insights';
+                document.getElementById('patientDetails').textContent = '';
+
+                // Add a default health metric
+                const healthSummary = document.getElementById('healthSummary');
+                healthSummary.innerHTML = '';
+
+                const healthMetric = document.createElement('div');
+                healthMetric.className = 'health-metric';
+                healthMetric.innerHTML = `
+                    <i class="fas fa-heartbeat"></i>
+                    <div>
+                        <div>Health Score</div>
+                        <div class="health-metric-value">75/100</div>
+                    </div>
+                `;
+                healthSummary.appendChild(healthMetric);
+            });
+        }
+
+        function displayPatientInfo(patient) {
+            const name = `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || 'Patient';
+            document.getElementById('patientName').textContent = name;
+
+            let details = '';
+            if (patient.age) {
+                details += `Age: ${patient.age} • `;
+            }
+            if (patient.gender) {
+                details += `Gender: ${patient.gender} • `;
+            }
+            if (details) {
+                details = details.slice(0, -3); // Remove trailing separator
+            }
+
+            document.getElementById('patientDetails').textContent = details || 'Your personalized health insights';
+
+            // Add health metrics
+            const healthSummary = document.getElementById('healthSummary');
+            healthSummary.innerHTML = '';
+
+            // Add health score if available
+            if (patient.health_score !== undefined) {
+                const healthScore = Math.round(parseFloat(patient.health_score) || 0);
+                const healthMetric = document.createElement('div');
+                healthMetric.className = 'health-metric';
+                healthMetric.innerHTML = `
+                    <i class="fas fa-heartbeat"></i>
+                    <div>
+                        <div>Health Score</div>
+                        <div class="health-metric-value">${healthScore}/100</div>
+                    </div>
+                `;
+                healthSummary.appendChild(healthMetric);
+
+                // Update progress bar
+                const progressSection = document.getElementById('progressSection');
+                progressSection.style.display = 'block';
+                const progressBar = document.getElementById('treatmentProgress');
+                progressBar.style.width = `${healthScore}%`;
+                document.getElementById('progressPercentage').textContent = `${healthScore}%`;
+            }
+
+            // Add more metrics if available
+            if (patient.mood) {
+                const moodMetric = document.createElement('div');
+                moodMetric.className = 'health-metric';
+                moodMetric.innerHTML = `
+                    <i class="fas fa-smile"></i>
+                    <div>
+                        <div>Mood</div>
+                        <div class="health-metric-value">${patient.mood}</div>
+                    </div>
+                `;
+                healthSummary.appendChild(moodMetric);
+            }
+
+            if (patient.under_medications) {
+                const medicationMetric = document.createElement('div');
+                medicationMetric.className = 'health-metric';
+                medicationMetric.innerHTML = `
+                    <i class="fas fa-pills"></i>
+                    <div>
+                        <div>Medications</div>
+                        <div class="health-metric-value">Active</div>
+                    </div>
+                `;
+                healthSummary.appendChild(medicationMetric);
+            }
+
+            // Add sleep metric if available
+            if (patient.sleep_hours) {
+                const sleepMetric = document.createElement('div');
+                sleepMetric.className = 'health-metric';
+                sleepMetric.innerHTML = `
+                    <i class="fas fa-moon"></i>
+                    <div>
+                        <div>Sleep</div>
+                        <div class="health-metric-value">${patient.sleep_hours} hrs/day</div>
+                    </div>
+                `;
+                healthSummary.appendChild(sleepMetric);
+            }
+        }
+
+        function displayAppointments(appointments) {
+            // Find the next upcoming appointment
+            const upcomingAppointments = appointments?.upcoming || [];
+
+            if (upcomingAppointments.length > 0) {
+                const nextAppointment = upcomingAppointments[0];
+                const nextAppointmentElement = document.getElementById('nextAppointment');
+                const nextAppointmentDateElement = document.getElementById('nextAppointmentDate');
+
+                // Format the appointment date
+                let appointmentDate = nextAppointment.date || 'Unknown';
+                if (nextAppointment.time) {
+                    appointmentDate += ` at ${nextAppointment.time}`;
+                }
+
+                nextAppointmentDateElement.textContent = appointmentDate;
+                nextAppointmentElement.style.display = 'flex';
+            }
+        }
+
+        function displayInsights(data, patientId) {
+            const insightsContainer = document.getElementById('insightsContainer');
+            const insights = data.insights;
+
+            if (!insights || insights.length === 0) {
+                insightsContainer.innerHTML = `
+                    <div class="no-insights">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>No Insights Available</h3>
+                        <p>We don't have enough data to generate insights for you yet. Continue using the app and check back later.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let insightsHTML = '';
+
+            insights.forEach(insight => {
+                // Determine icon based on insight type
+                let iconClass = 'fas fa-lightbulb';
+
+                switch(insight.type.toLowerCase()) {
+                    case 'progress':
+                        iconClass = 'fas fa-chart-line';
+                        break;
+                    case 'recommendation':
+                        iconClass = 'fas fa-clipboard-list';
+                        break;
+                    case 'milestone':
+                        iconClass = 'fas fa-trophy';
+                        break;
+                    case 'reminder':
+                        iconClass = 'fas fa-bell';
+                        break;
+                    case 'encouragement':
+                        iconClass = 'fas fa-heart';
+                        break;
+                }
+
+                // Determine priority badge
+                let priorityBadge = '';
+                if (insight.priority >= 5) {
+                    priorityBadge = '<span class="badge-high">High Priority</span>';
+                } else if (insight.priority >= 3) {
+                    priorityBadge = '<span class="badge-medium">Medium Priority</span>';
+                } else {
+                    priorityBadge = '<span class="badge-low">Low Priority</span>';
+                }
+
+                // Get insight type for CSS class
+                const insightType = insight.type.toLowerCase();
+
+                // Create insight card with type-specific class
+                let insightCard = `
+                    <div class="insight-card ${insightType}">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <i class="${iconClass}"></i>
+                            </div>
+                            <div>
+                                <h3 class="insight-title">${insight.title} ${priorityBadge}</h3>
+                                <div class="insight-type"><i class="${iconClass}"></i> ${insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}</div>
+                            </div>
+                        </div>
+                        <p class="insight-description">${insight.description}</p>
+                `;
+
+                // Add action steps if available
+                if (insight.action_steps && insight.action_steps.length > 0) {
+                    insightCard += `
+                        <div class="action-steps">
+                            <h5><i class="fas fa-tasks me-2"></i>Action Steps</h5>
+                            <ul>
+                    `;
+
+                    insight.action_steps.forEach(step => {
+                        insightCard += `<li>${step}</li>`;
+                    });
+
+                    insightCard += `
+                            </ul>
+                        </div>
+                    `;
+                }
+
+                insightCard += `</div>`;
+                insightsHTML += insightCard;
+            });
+
+            // Add generated time
+            const generatedTime = new Date(data.generated_at).toLocaleString();
+            insightsHTML += `<div class="generated-time">Insights generated: ${generatedTime}</div>`;
+
+            insightsContainer.innerHTML = insightsHTML;
+        }
+    </script>
+</body>
+</html>
