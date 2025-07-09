@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Chat - Specialized Care</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 15px 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .chat-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 30%;
+            background-color: #f0f2f5;
+            padding: 20px;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+        .patient-info {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .patient-info h3 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #4a6fa5;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        .info-section {
+            margin-bottom: 15px;
+        }
+        .info-section h4 {
+            font-size: 1rem;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        .info-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #fafafa;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            position: relative;
+        }
+        .user-message {
+            background-color: #4a6fa5;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        .ai-message {
+            background-color: #e9ecef;
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        .message-keywords {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .keyword-tag {
+            display: inline-block;
+            background-color: rgba(74, 111, 165, 0.1);
+            color: #4a6fa5;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-right: 5px;
+            font-size: 0.7rem;
+        }
+        .audio-controls {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .audio-btn {
+            background: none;
+            border: 1px solid #4a6fa5;
+            color: #4a6fa5;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .audio-btn:hover {
+            background-color: #4a6fa5;
+            color: white;
+        }
+        .audio-btn.playing {
+            background-color: #4a6fa5;
+            color: white;
+        }
+        .chat-input {
+            padding: 15px 20px;
+            background-color: #fff;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+        .chat-input input:focus {
+            border-color: #4a6fa5;
+            box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+        }
+        .btn-send {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-send:hover {
+            background-color: #3a5a8f;
+        }
+        .btn-mic {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-mic:hover {
+            background-color: #5a6268;
+        }
+        .btn-mic.recording {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        .status-bar {
+            padding: 5px 15px;
+            background-color: #e9ecef;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .status-bar.fade-out {
+            opacity: 0;
+        }
+        #connectionStatus {
+            font-weight: bold;
+        }
+        .connected {
+            color: green;
+        }
+        .disconnected {
+            color: red;
+        }
+        .connecting {
+            color: orange;
+        }
+        .voice-select {
+            width: auto;
+            padding: 5px;
+            border-radius: 20px;
+            border: 1px solid #ced4da;
+            background-color: #f8f9fa;
+            color: #4a6fa5;
+            font-size: 0.9rem;
+            margin-right: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .login-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .login-container h2 {
+            text-align: center;
+            color: #4a6fa5;
+            margin-bottom: 30px;
+        }
+        .persona-indicator {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 10px;
+            background-color: #e9ecef;
+        }
+        .persona-psychologist {
+            background-color: #6f42c1;
+            color: white;
+        }
+        .persona-dietician {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+        /* 🌊 Streaming styles */
+        .streaming-message {
+            border-left: 3px solid #007bff;
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .streaming-text {
+            min-height: 20px;
+        }
+
+        .streaming-indicator {
+            color: #007bff;
+            font-size: 0.9em;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .streaming-indicator i {
+            margin-right: 5px;
+        }
+
+        /* Animation for streaming text */
+        @keyframes streamingPulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .streaming-message .streaming-text {
+            animation: streamingPulse 1.5s ease-in-out infinite;
+        }
+
+        /* Remove animation when streaming is complete */
+        .message:not(.streaming-message) .streaming-text {
+            animation: none;
+        }
+
+        /* Fade out effect for status messages */
+        .fade-out {
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid d-flex flex-column h-100 py-3">
+        <div id="loginForm" class="login-container">
+            <h2><i class="fas fa-hospital-user me-2"></i> Healthcare Chat - Specialized Care</h2>
+            <div class="mb-3">
+                <label for="patientId" class="form-label">Patient ID</label>
+                <input type="text" class="form-control" id="patientId" value="f31a95c6-76ef-4bb2-936c-b258285682d9">
+            </div>
+            <div class="mb-3">
+                <label for="personaSelect" class="form-label">Select Healthcare Provider</label>
+                <select class="form-select" id="personaSelect">
+                    <option value="psychologist" selected>Psychologist (Dr. Ori)</option>
+                    <option value="dietician">Dietician (Dr. Maya)</option>
+                </select>
+            </div>
+            <!-- JWT token is now handled automatically by the system -->
+            <input type="hidden" id="token" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMzFhOTVjNi03NmVmLTRiYjItOTM2Yy1iMjU4Mjg1NjgyZDkiLCJyb2xlcyI6InBhdGllbnQiLCJleHAiOjE3MTU2MTYwMDB9.Ij0BnOgMwKFwB7VOzRdL-qdpEXNF7YvZZ8R_c-vKbcM">
+            <div class="mb-3">
+                <label for="voiceSelect" class="form-label">AI Voice</label>
+                <select class="form-select" id="voiceSelect">
+                    <option value="nova" selected>Nova (Female, Soft)</option>
+                    <option value="alloy">Alloy (Neutral)</option>
+                    <option value="echo">Echo (Male)</option>
+                    <option value="fable">Fable (Female)</option>
+                    <option value="onyx">Onyx (Male, Deep)</option>
+                    <option value="shimmer">Shimmer (Female, Clear)</option>
+                </select>
+            </div>
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Specialized Healthcare Chat:</strong> Connect directly with your chosen healthcare specialist for personalized care.
+            </div>
+            <button id="connectBtn" class="btn btn-primary w-100">Connect</button>
+        </div>
+
+        <div id="chatInterface" class="chat-container d-none">
+            <div class="chat-header">
+                <h2>
+                    <i class="fas fa-hospital-user me-2"></i> Healthcare Chat
+                    <span id="personaIndicator" class="persona-indicator persona-psychologist">Psychologist</span>
+                </h2>
+                <div class="d-flex align-items-center">
+                    <span id="connectionStatus" class="me-3 disconnected">Disconnected</span>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div id="statusMessage">Please connect to start chatting</div>
+            </div>
+            <div class="chat-body">
+                <div class="sidebar">
+                    <div class="patient-info">
+                        <h3>Patient Information</h3>
+                        <div id="patientInfoContent">
+                            <div class="d-flex justify-content-center align-items-center h-100">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will be added here -->
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Type your message here..." autocomplete="off">
+                <select id="chatVoiceSelect" class="voice-select" title="Select AI voice">
+                    <option value="nova" selected>Nova</option>
+                    <option value="alloy">Alloy</option>
+                    <option value="echo">Echo</option>
+                    <option value="fable">Fable</option>
+                    <option value="onyx">Onyx</option>
+                    <option value="shimmer">Shimmer</option>
+                </select>
+                <button id="micBtn" class="btn-mic" title="Record audio">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="sendBtn" class="btn-send" title="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // UI Elements
+            const connectBtn = document.getElementById('connectBtn');
+            const patientIdInput = document.getElementById('patientId');
+            const personaSelect = document.getElementById('personaSelect');
+            const tokenInput = document.getElementById('token');
+            const voiceSelect = document.getElementById('voiceSelect');
+            const chatVoiceSelect = document.getElementById('chatVoiceSelect');
+            const loginForm = document.getElementById('loginForm');
+            const chatInterface = document.getElementById('chatInterface');
+            const chatMessages = document.getElementById('chatMessages');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const micBtn = document.getElementById('micBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const statusMessage = document.getElementById('statusMessage');
+            const statusBar = document.querySelector('.status-bar');
+            const personaIndicator = document.getElementById('personaIndicator');
+            const patientInfoContent = document.getElementById('patientInfoContent');
+
+            // State variables
+            let socket = null;
+            let mediaRecorder = null;
+            let audioChunks = [];
+            let isRecording = false;
+            let currentAudio = null;
+            let currentPersona = 'psychologist';
+            let heartbeatInterval = null;
+            let reconnectAttempts = 0;
+            let maxReconnectAttempts = 5;
+            let messageQueue = [];
+            let connectionHealthTimer = null;
+
+            // 🌊 Streaming variables
+            let currentStreamingMessage = null;
+            let streamingAudioQueue = [];
+            let isPlayingStreamingAudio = false;
+            let streamingMetadata = null;
+            let streamingMessageElement = null;
+            let isStreamingActive = false;
+            let streamingFinalAudio = null;
+            let completeAudio = null; // Store complete audio for full playback
+
+            // Function to show status messages
+            function showStatusMessage(message, autoHide = true) {
+                statusMessage.textContent = message;
+                statusBar.classList.remove('fade-out');
+
+                if (autoHide) {
+                    setTimeout(() => {
+                        statusBar.classList.add('fade-out');
+                    }, 3000);
+                }
+            }
+
+            // Function to scroll chat to bottom
+            function scrollToBottom() {
+                // Use setTimeout to ensure the scroll happens after the DOM is updated
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 100);
+            }
+
+            // Function to update persona indicator
+            function updatePersonaIndicator(persona) {
+                personaIndicator.className = 'persona-indicator';
+                personaIndicator.classList.add('persona-' + persona);
+
+                const personaNames = {
+                    'psychologist': 'Psychologist (Dr. Ori)',
+                    'dietician': 'Dietician (Dr. Maya)'
+                };
+
+                personaIndicator.textContent = personaNames[persona];
+            }
+
+            // 🌊 Function to start a streaming message
+            function startStreamingMessage(sender = 'ai') {
+                if (currentStreamingMessage) {
+                    finishStreamingMessage();
+                }
+
+                // Set streaming active flag
+                isStreamingActive = true;
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'} streaming-message`;
+
+                // Add message text container
+                const messageText = document.createElement('div');
+                messageText.className = 'streaming-text';
+                messageText.textContent = '';
+                messageDiv.appendChild(messageText);
+
+                // Add timestamp
+                const timestamp = document.createElement('div');
+                timestamp.className = 'message-time';
+                timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageDiv.appendChild(timestamp);
+
+                // Add streaming indicator
+                const streamingIndicator = document.createElement('div');
+                streamingIndicator.className = 'streaming-indicator';
+                streamingIndicator.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Generating response...';
+                messageDiv.appendChild(streamingIndicator);
+
+                // Add to chat
+                chatMessages.appendChild(messageDiv);
+                scrollToBottom();
+
+                // Store references
+                currentStreamingMessage = messageText;
+                streamingMessageElement = messageDiv;
+                streamingAudioQueue = [];
+
+                console.log('🌊 Started streaming message');
+                return { messageDiv, messageText };
+            }
+
+            // 🧹 Function to clean JSON artifacts from streaming text
+            function cleanStreamingText(text) {
+                // MINIMAL cleaning - preserve ALL content including spaces
+                return text; // Return exactly as received - no cleaning at all
+            }
+
+            // 🚫 Function to check if text chunk should be skipped
+            function shouldSkipTextChunk(text) {
+                const cleanText = text.toLowerCase().trim();
+
+                // Skip JSON metadata fields
+                const jsonFields = [
+                    'extracted_keywords',
+                    'suggested_specialist',
+                    'current_persona',
+                    'response_id'
+                ];
+
+                // Skip if contains JSON field names
+                if (jsonFields.some(field => cleanText.includes(field))) {
+                    return true;
+                }
+
+                // Skip if it's just JSON syntax
+                if (/^[\{\}\[\],:"'\s]*$/.test(cleanText)) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            // 🌊 Function to append text to streaming message
+            function appendToStreamingMessage(text) {
+                if (!currentStreamingMessage || !text) return;
+
+                // Skip unwanted text chunks
+                if (shouldSkipTextChunk(text)) {
+                    console.log('🚫 Skipping text chunk:', text);
+                    return;
+                }
+
+                // Clean and append text
+                const cleanedText = cleanStreamingText(text);
+                currentStreamingMessage.textContent += cleanedText;
+                scrollToBottom();
+            }
+
+            // 🌊 Function to finish streaming message
+            function finishStreamingMessage(keywords = [], audio = null, responseId = null) {
+                if (!streamingMessageElement) return;
+
+                // Remove streaming classes and indicator
+                streamingMessageElement.classList.remove('streaming-message');
+                const streamingIndicator = streamingMessageElement.querySelector('.streaming-indicator');
+                if (streamingIndicator) {
+                    streamingIndicator.remove();
+                }
+
+                // Add keywords if provided
+                if (keywords && keywords.length > 0) {
+                    const keywordsDiv = document.createElement('div');
+                    keywordsDiv.className = 'message-keywords';
+                    keywords.forEach(keyword => {
+                        const keywordSpan = document.createElement('span');
+                        keywordSpan.className = 'keyword-tag';
+                        keywordSpan.textContent = keyword;
+                        keywordsDiv.appendChild(keywordSpan);
+                    });
+                    streamingMessageElement.appendChild(keywordsDiv);
+                }
+
+                // Add audio controls if audio is provided
+                if (audio && audio.trim()) {
+                    const audioControls = document.createElement('div');
+                    audioControls.className = 'audio-controls';
+
+                    const playBtn = document.createElement('button');
+                    playBtn.className = 'audio-btn';
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play complete audio';
+                    playBtn.onclick = () => playCompleteAudio(audio, playBtn);
+
+                    const pauseBtn = document.createElement('button');
+                    pauseBtn.className = 'audio-btn';
+                    pauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    pauseBtn.title = 'Pause audio';
+                    pauseBtn.style.display = 'none';
+                    pauseBtn.onclick = () => pauseAudio(playBtn, pauseBtn);
+
+                    audioControls.appendChild(playBtn);
+                    audioControls.appendChild(pauseBtn);
+                    streamingMessageElement.appendChild(audioControls);
+
+                    // Do NOT auto-play complete audio - only available for manual playback
+                    console.log('🎵 Complete audio controls added to message (manual playback only)');
+                }
+
+                // Add message to chat
+                scrollToBottom();
+            }
+
+            // 🧹 Function to clean up streaming state
+            function cleanupStreamingState() {
+                currentStreamingMessage = null;
+                streamingMessageElement = null;
+                isStreamingActive = false;
+                streamingFinalAudio = null;
+                completeAudio = null;
+                console.log('🧹 Streaming state cleaned up');
+            }
+
+            // 🎵 Function to play streaming audio
+            function playStreamingAudio(audioBase64) {
+                if (!audioBase64) return;
+
+                isPlayingStreamingAudio = true;
+                const audioBlob = base64ToBlob(audioBase64, 'audio/mpeg');
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+
+                audio.onended = () => {
+                    isPlayingStreamingAudio = false;
+                    URL.revokeObjectURL(audioUrl);
+
+                    // Play next audio in queue
+                    if (streamingAudioQueue.length > 0) {
+                        const nextAudio = streamingAudioQueue.shift();
+                        playStreamingAudio(nextAudio);
+                    }
+                };
+
+                audio.onerror = (e) => {
+                    console.error('🎵 Error playing streaming audio:', e);
+                    isPlayingStreamingAudio = false;
+                    URL.revokeObjectURL(audioUrl);
+                };
+
+                audio.play().catch(e => {
+                    console.error('🎵 Failed to play streaming audio:', e);
+                    isPlayingStreamingAudio = false;
+                    URL.revokeObjectURL(audioUrl);
+                });
+            }
+
+            // 🎵 Function to play complete audio
+            function playCompleteAudio(audioBase64, playBtn) {
+                if (!audioBase64) return;
+
+                // Stop current audio if playing
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+
+                const audioBlob = base64ToBlob(audioBase64, 'audio/mpeg');
+                const audioUrl = URL.createObjectURL(audioBlob);
+                currentAudio = new Audio(audioUrl);
+
+                // Update button state
+                playBtn.classList.add('playing');
+                playBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                playBtn.title = 'Stop audio';
+
+                currentAudio.onended = () => {
+                    playBtn.classList.remove('playing');
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play complete audio';
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudio = null;
+                };
+
+                currentAudio.onerror = (e) => {
+                    console.error('🎵 Error playing complete audio:', e);
+                    playBtn.classList.remove('playing');
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play complete audio';
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudio = null;
+                };
+
+                currentAudio.play().catch(e => {
+                    console.error('🎵 Failed to play complete audio:', e);
+                    playBtn.classList.remove('playing');
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play complete audio';
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudio = null;
+                });
+            }
+
+            // Function to pause audio
+            function pauseAudio(playBtn, pauseBtn) {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    playBtn.classList.remove('playing');
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play complete audio';
+                    currentAudio = null;
+                }
+            }
+
+            // Utility function to convert base64 to blob
+            function base64ToBlob(base64, mimeType) {
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                return new Blob([byteArray], { type: mimeType });
+            }
+
+            // Function to add regular message
+            function addMessage(text, sender, keywords = [], audio = null, responseId = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+
+                // Add message text
+                const messageText = document.createElement('div');
+                messageText.textContent = text;
+                messageDiv.appendChild(messageText);
+
+                // Add timestamp
+                const timestamp = document.createElement('div');
+                timestamp.className = 'message-time';
+                timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageDiv.appendChild(timestamp);
+
+                // Add keywords if provided
+                if (keywords && keywords.length > 0) {
+                    const keywordsDiv = document.createElement('div');
+                    keywordsDiv.className = 'message-keywords';
+                    keywords.forEach(keyword => {
+                        const keywordSpan = document.createElement('span');
+                        keywordSpan.className = 'keyword-tag';
+                        keywordSpan.textContent = keyword;
+                        keywordsDiv.appendChild(keywordSpan);
+                    });
+                    messageDiv.appendChild(keywordsDiv);
+                }
+
+                // Add audio controls if audio is provided
+                if (audio && audio.trim()) {
+                    const audioControls = document.createElement('div');
+                    audioControls.className = 'audio-controls';
+
+                    const playBtn = document.createElement('button');
+                    playBtn.className = 'audio-btn';
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.title = 'Play audio';
+                    playBtn.onclick = () => playCompleteAudio(audio, playBtn);
+
+                    audioControls.appendChild(playBtn);
+                    messageDiv.appendChild(audioControls);
+                }
+
+                // Add message to chat
+                chatMessages.appendChild(messageDiv);
+                scrollToBottom();
+            }
+
+            // Function to update patient info
+            function updatePatientInfo(patientData) {
+                let html = '';
+
+                if (patientData.patient) {
+                    const patient = patientData.patient;
+                    html += `
+                        <div class="info-section">
+                            <h4>Basic Info</h4>
+                            <div class="info-item">
+                                <strong>Name:</strong> ${patient.name || 'N/A'}
+                            </div>
+                            <div class="info-item">
+                                <strong>Age:</strong> ${patient.age || 'N/A'}
+                            </div>
+                            <div class="info-item">
+                                <strong>Gender:</strong> ${patient.gender || 'N/A'}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (patientData.medical_history && patientData.medical_history.length > 0) {
+                    html += `
+                        <div class="info-section">
+                            <h4>Medical History</h4>
+                    `;
+
+                    patientData.medical_history.slice(0, 3).forEach(mh => {
+                        html += `
+                            <div class="info-item">
+                                <strong>${mh.condition || 'Condition'}:</strong> ${mh.notes || 'N/A'}
+                                ${mh.diagnosis_date ? `<div class="text-muted small">${mh.diagnosis_date}</div>` : ''}
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                }
+
+                if (patientData.onboarding_questions && patientData.onboarding_questions.length > 0) {
+                    html += `
+                        <div class="info-section">
+                            <h4>Health Information</h4>
+                    `;
+
+                    patientData.onboarding_questions.slice(0, 3).forEach(q => {
+                        html += `
+                            <div class="info-item">
+                                <strong>Q:</strong> ${q.question || 'N/A'}
+                                <div><strong>A:</strong> ${q.answer || 'N/A'}</div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                }
+
+                if (patientData.emotion_analysis && patientData.emotion_analysis.length > 0) {
+                    html += `
+                        <div class="info-section">
+                            <h4>Recent Mood</h4>
+                    `;
+
+                    patientData.emotion_analysis.slice(0, 2).forEach(e => {
+                        html += `
+                            <div class="info-item">
+                                <strong>Emotion:</strong> ${e.dominant_emotion || 'N/A'}
+                                <div>Confidence: ${e.confidence ? (e.confidence * 100).toFixed(1) + '%' : 'N/A'}</div>
+                                ${e.created_at ? `<div class="text-muted small">${new Date(e.created_at).toLocaleDateString()}</div>` : ''}
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                }
+
+                patientInfoContent.innerHTML = html || '<div class="text-center text-muted">No patient information available</div>';
+            }
+
+            // Heartbeat functionality
+            function startHeartbeat() {
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                }
+
+                heartbeatInterval = setInterval(() => {
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: 'ping' }));
+                        console.log('💓 Heartbeat ping sent');
+                    }
+                }, 30000); // Send heartbeat every 30 seconds
+            }
+
+            function stopHeartbeat() {
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                    heartbeatInterval = null;
+                }
+            }
+
+            // Reconnection functionality
+            const MAX_RECONNECTS = 5;
+
+            function reconnectWebSocket() {
+                if (reconnectAttempts >= MAX_RECONNECTS) {
+                    console.warn("🛑 Max reconnect attempts reached.");
+                    showStatusMessage('Connection failed. Please refresh the page.', false);
+                    return;
+                }
+
+                reconnectAttempts++;
+                console.log(`🔁 Attempting reconnect (${reconnectAttempts})...`);
+                showStatusMessage(`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECTS})`, false);
+
+                setTimeout(() => {
+                    connectBtn.click(); // Trigger the same connection logic
+                }, 2000 * reconnectAttempts); // exponential backoff
+            }
+
+            // Connect to WebSocket
+            connectBtn.addEventListener('click', function() {
+                // Get values
+                const patientId = patientIdInput.value.trim();
+                const persona = personaSelect.value;
+                const token = tokenInput.value.trim();
+
+                if (!patientId) {
+                    alert('Please enter a patient ID');
+                    return;
+                }
+
+                if (!persona) {
+                    alert('Please select a healthcare provider');
+                    return;
+                }
+
+                // Update current persona
+                currentPersona = persona;
+                updatePersonaIndicator(currentPersona);
+
+                // Update UI
+                connectBtn.disabled = true;
+                connectBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Connecting...';
+                connectionStatus.textContent = 'Connecting...';
+                connectionStatus.className = 'connecting';
+                showStatusMessage('Connecting to server...', false);
+
+                // Create WebSocket connection
+                try {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/chat-final3/${patientId}/${persona}`;
+
+                    // Close existing socket if any
+                    if (socket) {
+                        socket.close();
+                    }
+
+                    socket = new WebSocket(wsUrl);
+
+                    // Connection opened
+                    socket.onopen = function(event) {
+                        console.log('🔌 WebSocket connected');
+
+                        // Reset reconnection counter and start heartbeat
+                        reconnectAttempts = 0;
+                        startHeartbeat();
+
+                        // Send authentication
+                        socket.send(JSON.stringify({
+                            token: token,
+                            voice: voiceSelect.value
+                        }));
+
+                        connectionStatus.textContent = 'Connected';
+                        connectionStatus.className = 'connected';
+                        showStatusMessage(`Connected to ${currentPersona} specialist`);
+
+                        // Show chat interface, hide login form
+                        loginForm.classList.add('d-none');
+                        chatInterface.classList.remove('d-none');
+
+                        // Sync the voice selection from login form to chat interface
+                        chatVoiceSelect.value = voiceSelect.value;
+
+                        // Reset connect button
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = 'Connect';
+                    };
+
+                    // Listen for messages
+                    socket.onmessage = function(event) {
+                        try {
+                            const data = JSON.parse(event.data);
+
+                            // Handle server heartbeat ping
+                            if (data.type === 'ping') {
+                                console.log('💓 Received server ping, sending pong');
+                                socket.send(JSON.stringify({"type": "pong"}));
+                                return;
+                            }
+
+                            // Handle heartbeat pong responses
+                            if (data.type === 'pong') {
+                                console.log('💓 Heartbeat pong received');
+                                return;
+                            }
+
+                            // Handle error
+                            if (data.error) {
+                                showStatusMessage(`Error: ${data.error}`, true);
+                                return;
+                            }
+
+                            // Handle authentication success
+                            if (data.type === 'auth_success') {
+                                console.log('✅ Authentication successful');
+                                if (data.patient_info) {
+                                    updatePatientInfo(data.patient_info);
+                                }
+                                showStatusMessage(`Connected to ${currentPersona} specialist - Ready to chat!`);
+                                return;
+                            }
+
+                            // 🌊 Handle streaming start
+                            if (data.type === 'streaming_start') {
+                                console.log('🌊 Streaming started');
+                                startStreamingMessage('ai');
+                                return;
+                            }
+
+                            // 🌊 Handle streaming text
+                            if (data.type === 'streaming_text') {
+                                if (!currentStreamingMessage) {
+                                    startStreamingMessage('ai');
+                                }
+                                appendToStreamingMessage(data.text);
+                                return;
+                            }
+
+                            // 🎵 Handle streaming audio
+                            if (data.type === 'streaming_audio') {
+                                // Limit audio queue size to prevent memory issues
+                                if (streamingAudioQueue.length > 100) {
+                                    streamingAudioQueue.shift(); // Remove oldest
+                                    console.warn('⚠️ Audio queue full, dropping oldest audio');
+                                }
+
+                                if (isPlayingStreamingAudio) {
+                                    streamingAudioQueue.push(data.audio);
+                                } else {
+                                    playStreamingAudio(data.audio);
+                                }
+                                return;
+                            }
+
+                            // 🎵 Handle complete audio (for full playback button)
+                            if (data.type === 'complete_audio') {
+                                // Store complete audio for full playback
+                                completeAudio = data.audio;
+                                console.log('🎵 Received complete audio for full playback', {
+                                    audioLength: data.audio ? data.audio.length : 0,
+                                    textLength: data.text ? data.text.length : 0
+                                });
+
+                                // IMPORTANT: Do NOT play complete audio automatically
+                                console.log('🎵 Complete audio stored for manual playback only - NOT auto-playing');
+                                return;
+                            }
+
+                            // 🌊 Handle streaming completion
+                            if (data.type === 'streaming_complete') {
+                                console.log('🌊 Streaming completed');
+
+                                // Wait a moment for complete audio to arrive, then finish streaming message
+                                setTimeout(() => {
+                                    console.log('🎵 Finishing streaming with audio:', {
+                                        hasCompleteAudio: !!completeAudio,
+                                        completeAudioLength: completeAudio ? completeAudio.length : 0
+                                    });
+
+                                    finishStreamingMessage(
+                                        data.extracted_keywords || [],
+                                        completeAudio || null, // Always use complete audio for play button
+                                        null
+                                    );
+
+                                    // Clean up streaming state
+                                    cleanupStreamingState();
+                                }, 50); // Small delay to ensure complete audio is received
+
+                                return;
+                            }
+
+                            // 🌊 Handle streaming error
+                            if (data.type === 'streaming_error') {
+                                if (currentStreamingMessage) {
+                                    finishStreamingMessage();
+                                }
+                                showStatusMessage(`Streaming error: ${data.error}`, true);
+                                cleanupStreamingState();
+                                return;
+                            }
+
+                            // Handle transcription
+                            if (data.type === 'transcription') {
+                                const transcription = data.text.trim();
+                                if (transcription) {
+                                    addMessage(transcription, 'user');
+                                    messageInput.value = '';
+                                }
+                                return;
+                            }
+
+                            // Handle general error messages
+                            if (data.type === 'error') {
+                                showStatusMessage(`Error: ${data.message}`, true);
+                                return;
+                            }
+
+                            // Handle processing time info (for debugging)
+                            if (data.processing_time) {
+                                console.log(`⏱️ Request processed in: ${data.processing_time}`);
+                            }
+
+                        } catch (error) {
+                            console.error('❌ Error parsing message:', error);
+                            console.error('Raw message:', event.data);
+
+                            // Don't close connection for parsing errors
+                            showStatusMessage(`Message processing error: ${error.message}`);
+
+                            // Clean up any broken streaming state
+                            if (isStreamingActive) {
+                                cleanupStreamingState();
+                            }
+                        }
+                    };
+
+                    // Connection closed
+                    socket.onclose = function(event) {
+                        console.log('🔌 WebSocket disconnected:', event.code, event.reason);
+
+                        connectionStatus.textContent = 'Disconnected';
+                        connectionStatus.className = 'disconnected';
+                        stopHeartbeat();
+
+                        // Reset connect button
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = 'Connect';
+
+                        // Clean up streaming state
+                        if (isStreamingActive) {
+                            cleanupStreamingState();
+                        }
+
+                        // Attempt reconnection if not intentional
+                        if (event.code !== 1000) { // 1000 = normal closure
+                            showStatusMessage('Connection lost. Attempting to reconnect...', false);
+                            reconnectWebSocket();
+                        } else {
+                            showStatusMessage('Disconnected from server');
+                        }
+                    };
+
+                    // Connection error
+                    socket.onerror = function(error) {
+                        console.error('🔌 WebSocket error:', error);
+                        connectionStatus.textContent = 'Connection Error';
+                        connectionStatus.className = 'disconnected';
+
+                        // Reset connect button
+                        connectBtn.disabled = false;
+                        connectBtn.innerHTML = 'Connect';
+
+                        showStatusMessage('Connection error occurred', true);
+                    };
+
+                } catch (error) {
+                    console.error('❌ Error creating WebSocket:', error);
+
+                    // Reset connect button
+                    connectBtn.disabled = false;
+                    connectBtn.innerHTML = 'Connect';
+
+                    connectionStatus.textContent = 'Connection Failed';
+                    connectionStatus.className = 'disconnected';
+                    showStatusMessage('Failed to create connection', true);
+                }
+            });
+
+            // Send message function
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message || !socket || socket.readyState !== WebSocket.OPEN) {
+                    return;
+                }
+
+                // Add user message to chat
+                addMessage(message, 'user');
+
+                // Send to server
+                socket.send(JSON.stringify({
+                    text: message,
+                    voice: chatVoiceSelect.value
+                }));
+
+                // Clear input
+                messageInput.value = '';
+            }
+
+            // Send button click
+            sendBtn.addEventListener('click', sendMessage);
+
+            // Enter key press
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Audio recording functionality
+            micBtn.addEventListener('click', function() {
+                if (!socket || socket.readyState !== WebSocket.OPEN) {
+                    showStatusMessage('Please connect to the server first');
+                    return;
+                }
+
+                if (!isRecording) {
+                    startRecording();
+                } else {
+                    stopRecording();
+                }
+            });
+
+            async function startRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = function(event) {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = function() {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onloadend = function() {
+                            const base64Audio = reader.result.split(',')[1];
+
+                            // Send audio to server
+                            socket.send(JSON.stringify({
+                                audio: base64Audio,
+                                voice: chatVoiceSelect.value
+                            }));
+                        };
+                        reader.readAsDataURL(audioBlob);
+
+                        // Stop all tracks
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    micBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                    showStatusMessage('Recording... Click to stop');
+
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    showStatusMessage('Error accessing microphone', true);
+                }
+            }
+
+            function stopRecording() {
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    micBtn.classList.remove('recording');
+                    micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                    showStatusMessage('Processing audio...');
+                }
+            }
+
+            // Voice selection change
+            chatVoiceSelect.addEventListener('change', function() {
+                console.log('Voice changed to:', chatVoiceSelect.value);
+            });
+
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', function() {
+                if (socket) {
+                    socket.close();
+                }
+                stopHeartbeat();
+            });
+
+            // Focus on message input when chat interface is shown
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        if (!chatInterface.classList.contains('d-none')) {
+                            setTimeout(() => {
+                                messageInput.focus();
+                            }, 100);
+                        }
+                    }
+                });
+            });
+
+            observer.observe(chatInterface, { attributes: true });
+
+            console.log('🚀 Chat Final 3 initialized successfully');
+        });
+    </script>
+</body>
+</html>
