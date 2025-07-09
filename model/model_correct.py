@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, date, time
 from sqlalchemy import (
     create_engine, Column, String, Integer, Boolean, ForeignKey, Text,
-    Date, Time, Enum, DateTime, Float, DECIMAL, Numeric, UUID
+    Date, Time, Enum, DateTime, Float, DECIMAL, Numeric, UUID, BigInteger, text
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -323,21 +323,48 @@ class MyTimelineEvent(Base):
     def __repr__(self):
         return f"<MyTimelineEvent(event_id={self.event_id}, name={self.event_name})>"
 
+# ---------------- CONVERSATIONS ----------------
+class Conversation(Base):
+    __tablename__ = "conversation"
+
+    conversation_id = Column(UUID, primary_key=True, default=text('gen_random_uuid()'))
+    user_id = Column(UUID, nullable=False)
+    patient_id = Column(UUID, ForeignKey("patients.patient_id"), nullable=True)
+    title = Column(String(100), nullable=False, default="New Conversation")
+    message_text = Column(Text, nullable=True)
+    summary_text = Column(Text, nullable=True)
+    extracted_keywords = Column(Text, nullable=True)
+    createdat = Column(DateTime(timezone=True), nullable=True, default=datetime.now)
+    isarchived = Column(Boolean, nullable=True, default=False)
+    archived_date = Column(DateTime, nullable=True)
+    feedback = Column(String(255), nullable=True)
+    feedback_id = Column(BigInteger, nullable=True)
+
+    # Relationship to chat messages
+    messages = relationship("ChatMessage", back_populates="conversation")
+
+    def __repr__(self):
+        return f"<Conversation(conversation_id={self.conversation_id}, user_id={self.user_id}, patient_id={self.patient_id})>"
+
 # ---------------- CHAT MESSAGES ----------------
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     chat_message_id = Column(String, primary_key=True)
-    sender_id = Column(String, nullable=False)
-    receiver_id = Column(String, nullable=False)
+    sender_id = Column(Text, nullable=False)
+    receiver_id = Column(Text, nullable=False)
     message_text = Column(Text, nullable=False)
     extracted_keywords = Column(Text)
-    # Keep this for backward compatibility
-    # user_id = Column(String)
-    createdAt = Column(DateTime, nullable=False, default=datetime.now)  # Required non-null field in the database
-    # updatedAt = Column(DateTime, nullable=False, default=datetime.now)  # Required non-null field in the database
+    createdAt = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
+    feedback = Column(String(255), nullable=True)
+    feedback_id = Column(BigInteger, nullable=True)
+    patient_id = Column(UUID, ForeignKey("patients.patient_id"), nullable=True)
+    conversation_id = Column(UUID, ForeignKey('conversation.conversation_id'), nullable=True)
 
+    # Relationships
+    conversation = relationship("Conversation", back_populates="messages")
     emotion_analysis = relationship("EmotionAnalysis", back_populates="chat_message")
+
 
     def __repr__(self):
         return f"<ChatMessage(chat_message_id={self.chat_message_id}, sender={self.sender_id})>"
